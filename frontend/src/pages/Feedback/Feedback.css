@@ -1,0 +1,39 @@
+.feedback-container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
+}
+
+.generate-btn {
+  background-color: #4cafef;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.generate-btn:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.feedback-section {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.feedback-section h3 {
+  margin-top: 10px;
+}
+
+.feedback-section ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+.feedback-item {
+  margin-bottom: 20px; /* space between items */
+}
+

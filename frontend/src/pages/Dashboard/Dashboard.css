@@ -1,0 +1,6 @@
+h2 { margin-top: 0; color: var(--primary); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 1rem; margin-top: 1rem; }
+.idea h3 { margin: 0 0 0.5rem 0; }
+.muted { color: var(--muted); }
+.meta { display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; font-size:0.9rem; color: #374151; }
+.error { color: red; }

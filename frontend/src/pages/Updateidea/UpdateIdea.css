@@ -1,0 +1,60 @@
+.update-idea-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.update-idea-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.update-idea-form label {
+  display: block;
+  font-weight: bold;
+  margin-top: 15px;
+  color: #444;
+}
+
+.update-idea-form input,
+.update-idea-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  transition: border 0.3s ease;
+}
+
+.update-idea-form input:focus,
+.update-idea-form textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.update-idea-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.update-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 18px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.update-btn:hover {
+  background-color: #0056b3;
+}

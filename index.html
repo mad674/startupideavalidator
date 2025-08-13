@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<div class="amazon" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;">    
+</div>
+<div class="cart">
+    <table border="1" style="width: 100%; text-align: center; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th>image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total price</th>
+                <th>delete</th>
+                <th>update quantity</th>
+            </tr>
+        </thead>
+        <tbody id="cart-items">
+            <!-- Cart items will be dynamically added here -->
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="7">Total</td>
+                <td id="total-price">$0</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<script>
+    let img = [
+        {"name": "apple", "url": "https://www.w3schools.com/images/w3schools_gree.jpg", "price": 20, "quantity": 1},
+        {"name": "banana", "url": "https://www.w3schools.com/images/w3schools_blue.jpg", "price": 22, "quantity": 1},
+        {"name": "orange", "url": "https://www.w3schools.com/images/w3schools_red.jpg", "price": 21, "quantity": 1}
+    ];
+
+    img.forEach(function(item) {
+        var div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+            <img src="${item.url}" alt="${item.name}" width="150">
+            <h3>${item.name}</h3>
+            <p>Price: $${item.price}</p>
+            <button onclick="addToCart('${item}')" type="Number">Add to Cart</button>
+        `;
+        document.querySelector('.amazon').appendChild(div);
+    });
+
+    function addToCart(name) {
+        let item = img.find(i => i.name === name);
+        if (item) {
+            item.quantity++;
+            updateCart();
+        }else{
+            document.getElementById("cart-items").innerHTML = `
+                <tr>
+                    <td><img src="${item.url}" alt="${item.name}" width="150"></td>
+                    <td>${item.name}</td>
+                    <td>$${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${item.price * item.quantity}</td>
+                    <td><button onclick="removeFromCart('${item.name}')">Delete</button></td>
+                    <td><button onclick="updateQuantity('${item.name}')">delete Quantity</button></
+                </tr>
+            `;
+        }
+    }
+</script>
+</body>
+</html>

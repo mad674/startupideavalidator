@@ -1,0 +1,9 @@
+.home { padding: 2rem 0; }
+.hero { display: flex; gap: 1.5rem; align-items: center; justify-content: space-between; }
+.hero h1 { color: var(--primary); font-size: 2rem; margin: 0 0 0.5rem 0; }
+.hero p { color: var(--muted); margin: 0 0 1rem 0; }
+.hero-cta .btn { margin-right: 0.5rem; }
+.features { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 1rem; margin-top: 1.5rem; }
+.card { background: var(--card); padding: 1rem; border-radius: 10px; box-shadow: 0 1px 6px rgba(2,6,23,0.06); }
+.btn { display: inline-block; padding: 0.5rem 0.75rem; background: var(--primary); color: white; border-radius: 6px; text-decoration: none; font-weight: 700; }
+.btn-outline { background: transparent; border: 1px solid #dbeafe; color: var(--primary); }

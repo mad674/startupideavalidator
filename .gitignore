@@ -1,0 +1,16 @@
+# Ignore node modules
+node_modules/
+
+# Ignore Python cache
+__pycache__/
+
+# Ignore compiled files
+*.class
+*.pyc
+
+# Ignore IDE/config files
+.vscode/
+.env
+backend/env
+fastapi/env
+frontend/env
