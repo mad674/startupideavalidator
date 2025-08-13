@@ -1,5 +1,5 @@
   import React, { useState } from "react";
-  import { useNavigate } from "react-router-dom";
+  import { Link, useNavigate } from "react-router-dom";
 
   export default function Login({ onLogin }) {
     const navigate = useNavigate();
@@ -65,6 +65,11 @@
           <button type="submit" style={{ marginTop: "20px", width: "100%" }}>
             Login
           </button>
+          <Link to="/register">
+            <button style={{ marginTop: "10px", width: "100%" }}>
+              Register
+            </button>
+          </Link>
         </form>
       </div>
     );

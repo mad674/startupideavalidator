@@ -14,6 +14,9 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Suggestions from "./pages/suggestions/Suggestions";
 import Feedback from "./pages/Feedback/Feedback";
+import Profile from "./pages/Profile/Profile";  
+
+
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
 
@@ -81,6 +84,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Feedback />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

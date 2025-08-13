@@ -1,1 +1,110 @@
-/* placeholder */
+/* Settings.css */
+
+.settings-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.settings-page .card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.settings-page .card:hover {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.settings-page h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.settings-page h3 {
+  color: #444;
+  margin-top: 20px;
+  font-size: 1.3rem;
+}
+
+.settings-page input {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.3s ease;
+}
+
+.settings-page input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.settings-page button {
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.1s ease;
+}
+
+.settings-page button:hover {
+  transform: translateY(-1px);
+}
+
+.settings-page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary button for updates */
+.settings-page button:not(.delete-btn) {
+  background: #007bff;
+  color: white;
+}
+
+.settings-page button:not(.delete-btn):hover {
+  background: #0056b3;
+}
+
+/* Danger buttons */
+.settings-page .delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.settings-page .delete-btn:hover {
+  background: #b52a35;
+}
+
+/* Divider styling */
+.settings-page hr {
+  margin: 24px 0;
+  border: none;
+  border-top: 1px solid #eee;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .settings-page .card {
+    padding: 16px;
+  }
+
+  .settings-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .settings-page button {
+    font-size: 0.95rem;
+  }
+}

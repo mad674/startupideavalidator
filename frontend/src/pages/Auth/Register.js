@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register({ onLogin }) {
   const navigate = useNavigate();
@@ -69,6 +69,9 @@ export default function Register({ onLogin }) {
         >
           {loading ? "Registering..." : "Register"}
         </button>
+        <Link to="/login" style={{ display: "block", marginTop: "10px" }}>
+          Already have an account? Login
+        </Link>
       </form>
     </div>
   );

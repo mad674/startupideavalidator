@@ -26,7 +26,7 @@ const validate=async(user_id, name, problem_statement, solution, target_market, 
                 business_model}),
         });
         const validateResponse = await validateidea.json();
-        console.log('validateResponse:', validateResponse);
+        // console.log('validateResponse:', validateResponse);
         return validateResponse.success;
     }catch(err){
         console.error('Error in validate:', err);
@@ -154,7 +154,7 @@ const getsuggestions=async(req, res, next)=> {
         });
         // console.log('suggestions:', suggestions);
         const suggestionResponse = await suggestions.json();
-        console.log('suggestionResponse:', suggestionResponse);
+        // console.log('suggestionResponse:', suggestionResponse);
         if (suggestionResponse.success == false) {
             return res.status(400).json({ success: false, errors: suggestionResponse.error });
         }
@@ -317,9 +317,14 @@ const deleteIdea = async (req, res, next) => {
 
 const deleteAllUserIdeas = async (req, res, next) => {
     try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        if(req.params.user_id != decodedToken.id){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
         const user = await User.findById(req.params.user_id);
         if (!user || !user.ideas || user.ideas.length === 0) {
-            return res.status(404).json({ message: 'No ideas found for this user' });
+            return res.status(404).json({success: false, message: 'No ideas found for this user' });
         }
         const deletedIdeas =await fetch(`${process.env.FASTAPI_URL}/api/delete-all-ideas`, {
             method: "POST",
@@ -328,12 +333,12 @@ const deleteAllUserIdeas = async (req, res, next) => {
         });
         const deletedIdeasResponse = await deletedIdeas.json();
         if(deletedIdeasResponse.success == false) {
-            return res.status(400).json({ errors: deletedIdeasResponse.error });
+            return res.status(400).json({ success: false, message: deletedIdeasResponse.message });
         }
         await Idea.deleteMany({ _id: { $in: user.ideas } });
         user.ideas = [];
         await user.save();
-        res.json({ message: 'All ideas deleted successfully' });
+        res.json({ success: true, message: 'All ideas deleted successfully' });
     } catch (err) {
         console.error('Error in deleteAllUserIdeas:', err);
         next(err);

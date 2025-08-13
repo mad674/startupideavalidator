@@ -78,7 +78,7 @@ const login = async (req, res, next) => {
 
 const getUserDetails = async (req, res, next) => {
     try {
-        const userId = req.user.id; // Assuming user ID is stored in req.user after authentication
+        const userId = req.params.user_id; // Assuming user ID is stored in req.user after authentication
         const user = await User.findById(userId).select('-password'); // Exclude password from response
 
         if (!user) {
@@ -93,16 +93,20 @@ const getUserDetails = async (req, res, next) => {
 };
 const updateUserDetails = async (req, res, next) => {
     try {
-        const userId = req.user.id; // Assuming user ID is stored in req.user after authentication
-        const { name, email } = req.body;
-
-        const user = await User.findByIdAndUpdate(userId, { name, email }, { new: true },{updatedAt: new Date()}).select('-password');
+        const token = req.headers.authorization.split(' ')[1];
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        if(req.params.user_id != decodedToken.id){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+        const userId = req.params.user_id; // Assuming user ID is stored in req.user after authentication
+        let {password } = req.body;
+        password= await bcrypt.hash(password, 10);
+        const user = await User.findByIdAndUpdate(userId, {password }, { new: true },{updatedAt: new Date()});
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({success: false, message: 'User not found' });
         }
-
-        res.status(200).json({ message: 'User details updated successfully', user });
+        res.status(200).json({success: true, message: 'User details updated successfully' });
     } catch (err) {
         console.error('Update User Details Error:', err.message);
         next(err);
@@ -111,13 +115,31 @@ const updateUserDetails = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
     try { // Assuming user ID is stored in req.user after authentication
-        const user = await User.findByIdAndDelete(req.params.user_id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        const token = req.headers.authorization.split(' ')[1];
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        if(req.params.user_id != decodedToken.id){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-
-        res.status(200).json({ message: 'User deleted successfully' });
+        let user =  await User.findById(req.params.user_id);
+        if (!user) {
+            return res.status(404).json({success: false, message: 'No user found' });
+        }
+        if(user.ideas.length > 0) {
+            const deletedIdeas =await fetch(`${process.env.FASTAPI_URL}/api/delete-all-ideas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: req.params.user_id })
+            });
+            const deletedIdeasResponse = await deletedIdeas.json();
+            if(deletedIdeasResponse.success == false) {
+                return res.status(400).json({ success: false, errors: deletedIdeasResponse.error });
+            }
+            await Idea.deleteMany({ _id: { $in: user.ideas } });
+            user.ideas = [];
+            await user.save();
+        }
+        user =await User.findByIdAndDelete(req.params.user_id);
+        res.status(200).json({ success: true, message: 'User deleted successfully' });
     } catch (err) {
         console.error('Delete User Error:', err.message);
         next(err);

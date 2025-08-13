@@ -22,8 +22,8 @@ def delete_idea(req: DeleteRequest):
 @router.post("/delete-all-ideas")
 def delete_all_ideas(req: DeleteAllRequest):
     results = store.collection.get(where={"user_id": req.user_id})
-    if not results["ids"]:
-        return {"success": False, "message": "No ideas found for this user"}
+    # if not results["ids"]:
+    #     return {"success": False, "message": "No ideas found for this user"}
 
     for idea_id in results["ids"]:
         store.delete_idea(req.user_id, idea_id)
