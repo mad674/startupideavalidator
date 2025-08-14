@@ -37,7 +37,7 @@ class MemoryStore:
 
             else:
                 doc = results["metadatas"][-1]
-                if doc['name'] == idea_name and json.loads(doc['structured']) == idea_text:
+                if doc['name'] == idea_name :#and json.loads(doc['structured']) == idea_text:
                     return False  # already exists
             embedding = self.embedder.encode(combined_text).tolist()
 

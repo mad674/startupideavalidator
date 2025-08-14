@@ -16,7 +16,10 @@ export default function UpdateIdea() {
     business_model: "",
   });
   const [loading, setLoading] = useState(true);
-
+  const sanitizeInput = (str) => {
+    if (!str) return '';
+    return str.replace(/[+#*\/'\"\\%]/g, '');
+  };
   // Fetch current idea details for pre-filling form
   useEffect(() => {
     async function fetchIdea() {
@@ -27,7 +30,7 @@ export default function UpdateIdea() {
           setFormData({
             name: data.idea.data.name || "",
             problem_statement: data.idea.data.problem_statement || "",
-            solution: data.idea.data.solution || "",
+            solution:data.idea.data.solution || "",
             target_market: data.idea.data.target_market || "",
             team: data.idea.data.team || "",
             business_model: data.idea.data.business_model || "",
@@ -50,7 +53,7 @@ export default function UpdateIdea() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizeInput(value),
     }));
   };
 

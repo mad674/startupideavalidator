@@ -2,7 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { updateOne } = require('../models/Idea');
-
+const Idea = require('../models/Idea');
 
 // REGISTER CONTROLLER
 const register = async (req, res, next) => {

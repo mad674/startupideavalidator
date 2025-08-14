@@ -54,7 +54,7 @@ const calculatescore=async(user_id, savedIdea, token)=> {
         const getscoreResponse = await getscore.json();
         if(getscoreResponse.success == false) {
             await Idea.deleteOne({ _id: savedIdea._id });
-            return getscoreResponse.success;
+            return getscoreResponse.success//, getscoreResponse.response;
             // return res.status(400).json({ message: getscoreResponse.response});
         }
         // console.log('getscore.scores:', getscoreResponse);
@@ -115,7 +115,7 @@ const submitIdea=async (req, res, next)=> {
         }
         const getscore=await calculatescore(user_id, savedIdea, req.headers.authorization);
         if(!getscore) {
-            return res.status(500).json({ message: 'Failed to calculate score' });    
+            return res.status(500).json({ message: 'IDEA ALREADY EXISTS' });    
         }
         // console.log('getscore:', getscore);
         // console.log('updatedIdea:', updatedIdea);
@@ -220,6 +220,15 @@ const updateidea=async(req, res, next)=> {
             team: req.body.data.team || idea.data.team,
             business_model: req.body.data.business_model || idea.data.business_model,
         };
+        const existingIdeas = await Idea.find({ user_id: idea.user_id });
+
+        // Check if any idea has the same name
+        const duplicate = existingIdeas.some((i) => i.data.name === newdata.name);
+
+        if (duplicate) {
+        return res.status(400).json({ success: false, message: 'Idea name already exists' });
+        }
+
         const validatenewdata=await validate(
             idea.user_id,
             newdata.name,
@@ -247,7 +256,7 @@ const updateidea=async(req, res, next)=> {
                 { _id: idea._id },
                 { $set: { score: idea.score } },
             );
-            return res.status(500).json({ message: 'Failed to calculate score',success:calculateScore });    
+            return res.status(500).json({success: false, message: 'IDEA already exists!' });    
         }
         res.status(200).json({ message: 'Idea updated successfully',success: true});
     } catch (err) {

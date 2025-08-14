@@ -15,14 +15,17 @@ export default function CreateIdea() {
   // const [error, setEr/ror] = useState(null);
   const navigate = useNavigate();
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
+  const sanitizeInput = (str) => {
+    if (!str) return '';
+    return str.replace(/[+#*\/'\"\\%]/g, '');
+  };
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const formWithDefaults = Object.fromEntries(
       Object.entries(form).map(([key, value]) => [
         key,
-        value.trim() === '' ? 'Not available' : value
+        sanitizeInput(value.trim() === '' ? 'Not available' : value)
       ])
     );
     try {
@@ -42,7 +45,7 @@ export default function CreateIdea() {
         alert(res.message || 'Idea submitted successfully');
         navigate(`/ideas/${btoa(res.idea_id)}`);
       }else{
-        alert(res.message || 'Idea submission failed');
+        alert(res.message|| 'Idea submission failed');
       }
       
     } catch (err) {
