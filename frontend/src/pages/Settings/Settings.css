@@ -1,110 +1,121 @@
-/* Settings.css */
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --delete: #dc2626;
+  --delete-hover: #b91c1c;
+  --bg-light: #f8fafc;
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+}
 
 .settings-page {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.settings-page .card {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
-}
-
-.settings-page .card:hover {
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  font-family: "Inter", sans-serif;
+  background: var(--bg-light);
+  min-height: 80vh;
+  padding: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .settings-page h2 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 30px;
   text-align: center;
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 20px;
 }
 
-.settings-page h3 {
-  color: #444;
-  margin-top: 20px;
-  font-size: 1.3rem;
-}
-
-.settings-page input {
+.card {
+  background: var(--card-bg);
+  padding: 30px 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px var(--card-shadow);
+  max-width: 450px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card h3 {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.card input {
   padding: 10px 12px;
-  margin: 8px 0;
-  border: 1px solid #ccc;
   border-radius: 8px;
+  border: 1px solid #cbd5e1;
   font-size: 1rem;
-  transition: border 0.3s ease;
-}
-
-.settings-page input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-.settings-page button {
   width: 100%;
-  padding: 10px 14px;
-  margin-top: 10px;
+  margin-bottom: 10px;
+  transition: border 0.2s ease;
+}
+
+.card input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.card button {
+  padding: 10px 15px;
   font-size: 1rem;
+  font-weight: 600;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.3s ease, transform 0.1s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-.settings-page button:hover {
-  transform: translateY(-1px);
-}
-
-.settings-page button:disabled {
-  opacity: 0.6;
+.card button:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Primary button for updates */
-.settings-page button:not(.delete-btn) {
-  background: #007bff;
-  color: white;
+.card button:not(.delete-btn) {
+  background: var(--primary);
+  color: #fff;
 }
 
-.settings-page button:not(.delete-btn):hover {
-  background: #0056b3;
+.card button:not(.delete-btn):hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
-/* Danger buttons */
-.settings-page .delete-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.settings-page .delete-btn:hover {
-  background: #b52a35;
-}
-
-/* Divider styling */
-.settings-page hr {
-  margin: 24px 0;
+.card hr {
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e2e8f0;
+  margin: 15px 0;
 }
 
-/* Responsive design */
-@media (max-width: 600px) {
-  .settings-page .card {
-    padding: 16px;
+.card .delete-btn {
+  background: var(--delete);
+  color: #fff;
+}
+
+.card .delete-btn:hover {
+  background: var(--delete-hover);
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .card {
+    padding: 20px 15px;
   }
 
   .settings-page h2 {
     font-size: 1.5rem;
   }
 
-  .settings-page button {
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .card button {
     font-size: 0.95rem;
   }
 }

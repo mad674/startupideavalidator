@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    otp:Number,
+    otpExpiresAt:Date,
     createdAt: {
         type: Date,
         default: Date.now

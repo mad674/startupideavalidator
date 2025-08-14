@@ -1,39 +1,100 @@
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-light: #f8fafc;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+}
+
 .feedback-container {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
+  font-family: "Inter", sans-serif;
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 25px 20px;
+  background: var(--bg-light);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px var(--card-shadow);
+  text-align: center;
+}
+
+.feedback-container h2 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 25px;
 }
 
 .generate-btn {
-  background-color: #4cafef;
-  color: white;
-  padding: 12px 20px;
+  padding: 12px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
+  background: var(--primary);
+  color: white;
   cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.generate-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
 .generate-btn:disabled {
-  background-color: #999;
+  background: #94a3b8;
   cursor: not-allowed;
+  transform: none;
 }
 
 .feedback-section {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 6px;
-  margin-top: 15px;
-}
-
-.feedback-section h3 {
-  margin-top: 10px;
+  margin-top: 20px;
+  text-align: left;
 }
 
 .feedback-section ul {
-  list-style-type: disc;
-  padding-left: 20px;
-}
-.feedback-item {
-  margin-bottom: 20px; /* space between items */
+  list-style-type: none;
+  padding: 0;
 }
 
+.feedback-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px var(--card-shadow);
+  color: var(--text-dark);
+  font-size: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feedback-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px var(--card-shadow);
+}
+
+/* Loading text */
+.feedback-container p {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .feedback-container {
+    margin: 30px 15px;
+    padding: 20px 15px;
+  }
+
+  .generate-btn {
+    width: 100%;
+  }
+
+  .feedback-item {
+    padding: 12px 15px;
+  }
+}

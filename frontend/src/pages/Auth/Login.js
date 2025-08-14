@@ -1,76 +1,69 @@
-  import React, { useState } from "react";
-  import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./Login.css";
 
-  export default function Login({ onLogin }) {
-    const navigate = useNavigate();
-    const [form, setForm] = useState({ email: "", password: "" });
+export default function Login({ onLogin }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      try {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: form.email,
-            password: form.password,
-          }),
-        });
+    try {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (data.success) {
-          alert(data.message || "Login successful!");
-          onLogin(data.token);
-          navigate("/dashboard");
-        } else {
-          alert(data.message || "Login failed.");
-        }
-      } catch (error) {
-        console.error("Error logging in:", error);
-        alert("An error occurred while logging in.");
+      if (data.success) {
+        alert(data.message || "Login successful!");
+        onLogin(data.token);
+        navigate("/dashboard");
+      } else {
+        alert(data.message || "Login failed.");
       }
-    };
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("An error occurred while logging in.");
+    }
+  };
 
-    return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        <h2>Login</h2>
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: "inline-block", textAlign: "left" }}
-        >
-          <div>
-            <label>Email: </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-              placeholder="Enter your email"
-            />
-          </div>
-          <div style={{ marginTop: "10px" }}>
-            <label>Password: </label>
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-              placeholder="Enter your password"
-            />
-          </div>
-          <button type="submit" style={{ marginTop: "20px", width: "100%" }}>
-            Login
-          </button>
-          <Link to="/register">
-            <button style={{ marginTop: "10px", width: "100%" }}>
-              Register
-            </button>
-          </Link>
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <h2>Welcome Back</h2>
+        <p className="login-subtitle">Login to continue to your dashboard</p>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <label>Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            placeholder="Enter your email"
+          />
+
+          <label>Password</label>
+          <input
+            type="password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            placeholder="Enter your password"
+          />
+
+          <button type="submit" className="login-btn">Login</button>
+
+          <p className="register-link">
+            Don’t have an account? <Link to="/register">Register</Link>
+          </p>
+          <p className="forgot-link"><Link to="/forgot-password">Forgot Password?</Link></p>
         </form>
       </div>
-    );
-  }
+    </div>
+  );
+}

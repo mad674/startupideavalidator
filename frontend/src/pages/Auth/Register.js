@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Register.css";
 
 export default function Register({ onLogin }) {
   const navigate = useNavigate();
@@ -13,16 +14,14 @@ export default function Register({ onLogin }) {
     try {
       const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+
       const data = await res.json();
       if (data.success) {
         alert(data.message || "Registration successful");
-        // localStorage.setItem("token", data.token);
-        onLogin(data.token); 
+        onLogin(data.token);
         navigate("/dashboard");
       } else {
         alert(data.message || "Registration failed");
@@ -36,43 +35,39 @@ export default function Register({ onLogin }) {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Register</h2>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "inline-block", textAlign: "left" }}
-      >
-        <div style={{ marginTop: "10px" }}>
-          <label>Email: </label>
+    <div className="register-container">
+      <div className="register-card">
+        <h2>Create Account</h2>
+        <p className="register-subtitle">Sign up to access your dashboard</p>
+
+        <form onSubmit={handleSubmit} className="register-form">
+          <label>Email</label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
-            placeholder="Enter your email address"
+            placeholder="Enter your email"
           />
-        </div>
-        <div style={{ marginTop: "10px" }}>
-          <label>Password: </label>
+
+          <label>Password</label>
           <input
             type="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
-            placeholder="create a secure password"
+            placeholder="Create a secure password"
           />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ marginTop: "20px", width: "100%" }}
-        >
-          {loading ? "Registering..." : "Register"}
-        </button>
-        <Link to="/login" style={{ display: "block", marginTop: "10px" }}>
-          Already have an account? Login
-        </Link>
-      </form>
+
+          <button type="submit" className="register-btn" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+
+          <p className="login-link">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

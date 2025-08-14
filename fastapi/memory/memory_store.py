@@ -49,9 +49,7 @@ class MemoryStore:
                     "user_id": user_id,
                     "name": idea_name,
                     "scores": scores,
-                    "structured": json.dumps(idea_text),       # ✅ store full structured data
-                    "feedback": "",               # ✅ initialize empty feedback
-                    "suggestions": "",            # ✅ initialize empty suggestions
+                    "structured": json.dumps(idea_text),       # ✅ store full structured data          # ✅ initialize empty suggestions
                     "timestamp": datetime.now().isoformat()
                 }]
             )
@@ -68,8 +66,8 @@ class MemoryStore:
                 "idea": results["documents"][0],
                 "structured": json.loads(meta.get("structured", {})),
                 "scores": meta.get("scores", ""),
-                "feedback": meta.get("feedback", ""),
-                "suggestions": meta.get("suggestions", ""),
+                # "feedback": meta.get("feedback", ""),
+                # "suggestions": meta.get("suggestions", ""),
             }
         return None
 
@@ -82,8 +80,8 @@ class MemoryStore:
                 "idea": doc,
                 "structured": json.loads(meta.get("structured", {})),
                 "scores": meta.get("scores", ""),
-                "feedback": meta.get("feedback", ""),
-                "suggestions": meta.get("suggestions", ""),
+                # "feedback": meta.get("feedback", ""),
+                # "suggestions": meta.get("suggestions", ""),
                 "timestamp": meta["timestamp"]
             })
         return sorted(ideas, key=lambda x: x["timestamp"], reverse=True)
@@ -128,63 +126,4 @@ class MemoryStore:
         return False
 
     
-    def update_suggestions(self, user_id, idea_id, new_suggestions):
-        # Normalize new suggestions
-        if isinstance(new_suggestions, list):
-            new_suggestions = "\n".join([str(x) for x in new_suggestions])
-        else:
-            new_suggestions = str(new_suggestions)
-
-        results = self.collection.get(ids=[idea_id], where={"user_id": user_id})
-
-        # ✅ Check if we got valid results
-        if not results or not results.get("documents") or len(results["documents"]) == 0:
-            return False  # Idea not found in DB
-
-        existing_meta = results["metadatas"][0] or {}
-        old_suggestions = str(existing_meta.get("suggestions", ""))
-
-        updated_suggestions = (old_suggestions + "\n" + new_suggestions).strip()
-
-        self.collection.update(
-            ids=[idea_id],
-            embeddings=[results.get("embeddings", [None])[0]],
-            documents=[results["documents"][0]],
-            metadatas=[{
-                **existing_meta,
-                "suggestions": updated_suggestions,
-                "timestamp": datetime.now().isoformat()
-            }]
-        )
-        return True
-
-    def update_feedback(self, user_id, idea_id, new_feedback):
-        """
-        Update or append feedback for a specific idea.
-        new_feedback: list of paragraph strings or structured dicts
-        """
-        if isinstance(new_feedback, list):
-            new_feedback = "\n".join([str(x) for x in new_feedback])
-        else:
-            new_feedback = str(new_feedback)
-        results = self.collection.get(ids=[idea_id], where={"user_id": user_id})
-        
-        if not results or not results.get("documents") or len(results["documents"]) == 0:
-            return False  # Idea not found in DB
-
-        existing_meta = results["metadatas"][0] or {}
-        old_feedback = str(existing_meta.get("feedback", ""))
-        updated_feedback = (old_feedback + "\n" + new_feedback).strip()
-        self.collection.update(
-            ids=[idea_id],
-            embeddings=[results["embeddings"][0]],
-            documents=[results["documents"][0]],
-            metadatas=[{
-                **existing_meta,
-                "feedback": updated_feedback,
-                "timestamp": datetime.now().isoformat()
-            }]
-        )
-        return True
-    # return False
 

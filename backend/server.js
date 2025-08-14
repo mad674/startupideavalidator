@@ -17,7 +17,7 @@ connectDB();
 
 // API Routes
 app.use('/idea', ideaRoutes); // Idea routes are prefixed with '/idea'
-app.use('/user', userRoutes); // User routes are prefixed with '/user' 
+app.use('/user', userRoutes); // User routes are prefixed with '/user'
 
 // Error Handler Middleware
 app.use(errorHandler);

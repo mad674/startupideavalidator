@@ -5,7 +5,10 @@ export default function Settings() {
   // const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+  const [loading3, setLoading3] = useState(false);
+
 
   const token = localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
@@ -17,8 +20,10 @@ export default function Settings() {
     if (password && password !== confirmPassword) {
       return alert("Passwords do not match!");
     }
-
-    setLoading(true);
+    if(password.length<=0){
+      return alert("Password cannot be empty");
+    }
+    setLoading1(true);
     try {
       const res = await fetch(
         `${process.env.REACT_APP_BACKEND}/user/updateuserdetails/${userId}`,
@@ -33,14 +38,14 @@ export default function Settings() {
       );
       const data = await res.json();
       if (data.success) {
-        alert(data.message || "User details updated successfully");
+        alert(data.message || "New password updated successfully");
       } else {
         alert(data.message || "Failed to update user details");
       }
     } catch {
       alert("Error updating user");
     } finally {
-      setLoading(false);
+      setLoading1(false);
     }
   }
 
@@ -48,7 +53,7 @@ export default function Settings() {
   async function handleDeleteAccount() {
     if (!userId) return alert("User not found!");
     if (!window.confirm("Are you sure you want to delete your account?")) return;
-    setLoading(true);
+    setLoading3(true);
     try {
       const res = await fetch(
         `${process.env.REACT_APP_BACKEND}/user/deleteuser/${userId}`,
@@ -63,7 +68,7 @@ export default function Settings() {
         localStorage.removeItem("token");
         // setIsAuthenticated(false); // ✅ instantly updates auth state
         // navigate("/login");   
-        window.location.href = "/";     // redirect after logout
+        window.location.href = "/login";     // redirect after logout
       } else {
         setIsAuthenticated(false); // ✅ also handle invalid/expired token case
         alert(data.message || "Failed to delete account");
@@ -72,7 +77,7 @@ export default function Settings() {
     } catch {
       alert("Error deleting account");
     } finally {
-      setLoading(false);
+      setLoading3(false);
     }
   }
 
@@ -80,7 +85,7 @@ export default function Settings() {
   async function handleDeleteAllIdeas() {
     if (!userId) return alert("User not found!");
     if (!window.confirm("This will delete ALL your ideas. Continue?")) return;
-    setLoading(true);
+    setLoading2(true);
     try {
       const res = await fetch(
         `${process.env.REACT_APP_BACKEND}/idea/deletealluserideas/${userId}`,
@@ -98,7 +103,7 @@ export default function Settings() {
     } catch {
       alert("Error deleting ideas");
     } finally {
-      setLoading(false);
+      setLoading2(false);
     }
   }
 
@@ -111,16 +116,18 @@ export default function Settings() {
           type="password"
           placeholder="New Password "
           value={password}
+          required={true}
           onChange={(e) => setPassword(e.target.value)}
         />
         <input
           type="password"
           placeholder="Confirm New Password"
           value={confirmPassword}
+          required={true}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <button onClick={handleUpdate} disabled={loading}>
-          {loading ? "Updating..." : "Update Password"}
+        <button onClick={handleUpdate} disabled={loading1}>
+          {loading1 ? "Updating..." : "Update Password"}
         </button>
 
         <hr />
@@ -129,9 +136,9 @@ export default function Settings() {
         <button
           onClick={handleDeleteAllIdeas}
           className="delete-btn"
-          disabled={loading}
+          disabled={loading2}
         >
-          {loading ? "Deleting..." : "Delete All Ideas"}
+          {loading2 ? "Deleting..." : "Delete All Ideas"}
         </button>
 
         <hr />
@@ -140,9 +147,9 @@ export default function Settings() {
         <button
           onClick={handleDeleteAccount}
           className="delete-btn"
-          disabled={loading}
+          disabled={loading3}
         >
-          {loading ? "Deleting..." : "Delete My Account"}
+          {loading3 ? "Deleting..." : "Delete My Account"}
         </button>
       </div>
     </div>

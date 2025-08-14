@@ -19,7 +19,7 @@ def getsuggestions(request: SuggestionRequest):
         if not request.data or not request.scores:
             return {"success": False, "error": "Missing data or scores"}
         suggestions=suggest_improvements(request.data, request.scores)
-        memory.update_suggestions(request.user_id, request.idea_id, suggestions)
+        # memory.update_suggestions(request.user_id, request.idea_id, suggestions)
         return {
             "success": True,
             "suggestions": json.loads(suggestions) # Convert suggestions

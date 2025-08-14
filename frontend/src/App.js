@@ -15,13 +15,14 @@ import Register from "./pages/Auth/Register";
 import Suggestions from "./pages/suggestions/Suggestions";
 import Feedback from "./pages/Feedback/Feedback";
 import Profile from "./pages/Profile/Profile";  
-
+import ForgotPassword from "./pages/Auth/ForgotPassword";
+import ResetPassword from "./pages/Auth/ResetPassword";
 
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
 
   const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
+    return isAuthenticated ? children : <Navigate to="/" replace />;
   };
 
   return (
@@ -46,6 +47,15 @@ export default function App() {
             element={
               isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register onLogin={login} />
             }
+          />
+          <Route path="/forgot-password" 
+          element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPassword />
+            } />
+          <Route path="/reset-password/:userId" 
+            element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <ResetPassword />
+            } 
           />
           <Route
             path="/dashboard"

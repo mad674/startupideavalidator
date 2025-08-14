@@ -1,35 +1,109 @@
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-light: #f8fafc;
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+  --error: #dc2626;
+}
+
 .suggestions-container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
+  font-family: "Inter", sans-serif;
+  background: var(--bg-light);
+  min-height: 80vh;
+  padding: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.suggestions-container h2 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 .generate-btn {
-  background-color: #4cafef;
-  color: white;
+  background: var(--primary);
+  color: #fff;
   border: none;
-  padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.generate-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
 .generate-btn:disabled {
-  background-color: #999;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .error {
-  color: red;
-  font-weight: bold;
+  color: var(--error);
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.suggestions-list {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px var(--card-shadow);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.suggestions-list h3 {
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
 }
 
 .suggestions-list ul {
   list-style-type: disc;
   padding-left: 20px;
+  color: var(--text-dark);
 }
 
 .suggestions-list li {
   margin-bottom: 8px;
-  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .suggestions-container {
+    padding: 30px 15px;
+  }
+
+  .suggestions-container h2 {
+    font-size: 1.5rem;
+  }
+
+  .generate-btn {
+    width: 100%;
+    font-size: 0.95rem;
+  }
+
+  .suggestions-list {
+    padding: 20px;
+  }
+
+  .suggestions-list h3 {
+    font-size: 1rem;
+  }
 }
