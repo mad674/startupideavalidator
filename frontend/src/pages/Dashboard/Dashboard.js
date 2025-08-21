@@ -92,7 +92,7 @@ export default function Dashboard() {
                   Average Score:{" "}
                   {idea.score["Average Score"] == null
                     ? 0
-                    : idea.score["Average Score"]}
+                    : idea.score["Average Score"]+" / 5"}
                 </p>
               </Link>
             ))}

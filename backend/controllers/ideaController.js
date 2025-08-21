@@ -78,7 +78,7 @@ const submitIdea=async (req, res, next)=> {
         const { user_id, name, problem_statement, solution, target_market, business_model,team } = req.body;
         const validea=await validate(user_id, name, problem_statement, solution, target_market, business_model,team,req.headers.authorization);
         if (!validea) {
-            return res.status(400).json({ message: 'Not a Valid startup idea' });
+            return res.status(400).json({ success: false, message: 'Not a Valid startup idea' });
         }  
         const data={
                 name: name,
@@ -111,17 +111,17 @@ const submitIdea=async (req, res, next)=> {
         });
         const savedIdea = await idea.save();
         if (!savedIdea) {
-            return res.status(500).json({ message: 'Failed to save idea' });    
+            return res.status(500).json({success: false, message: 'Failed to save idea' });    
         }
         const getscore=await calculatescore(user_id, savedIdea, req.headers.authorization);
         if(!getscore) {
-            return res.status(500).json({ message: 'IDEA ALREADY EXISTS' });    
+            return res.status(500).json({ success: false, message: 'IDEA ALREADY EXISTS' });    
         }
         // console.log('getscore:', getscore);
         // console.log('updatedIdea:', updatedIdea);
         const getuser = await User.findOne({ _id: user_id});
         if (!getuser) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({success: false, message: 'User not found' });
         }
         getuser.ideas.push(idea._id.toString());
         getuser.updatedAt = new Date();
@@ -223,12 +223,12 @@ const updateidea=async(req, res, next)=> {
         const existingIdeas = await Idea.find({ user_id: idea.user_id });
 
         // Check if any idea has the same name
-        const duplicate = existingIdeas.some((i) => i.data.name === newdata.name);
+        const duplicate = existingIdeas.some((i) => i.data.name === newdata.name && i._id.toString() !== idea._id.toString());
 
         if (duplicate) {
         return res.status(400).json({ success: false, message: 'Idea name already exists' });
         }
-
+        // console.log('newdata:', newdata);
         const validatenewdata=await validate(
             idea.user_id,
             newdata.name,
@@ -239,9 +239,10 @@ const updateidea=async(req, res, next)=> {
             newdata.team,
             req.headers.authorization
         )
-        if(validatenewdata.success==false) {
+        if(validatenewdata==false) {
             return res.status(400).json({ errors: validatenewdata.error,message:'unable to update idea ,This is not a startup idea' });
         }
+        // console.log('updateding idea');
         await Idea.updateOne(
             { _id: idea._id },
             { $set: { data: newdata, updatedAt: new Date() } }
@@ -258,6 +259,7 @@ const updateidea=async(req, res, next)=> {
             );
             return res.status(500).json({success: false, message: 'IDEA already exists!' });    
         }
+        // console.log('saved');
         res.status(200).json({ message: 'Idea updated successfully',success: true});
     } catch (err) {
         console.error('Error in updateidea:', err);
@@ -309,8 +311,9 @@ const deleteIdea = async (req, res, next) => {
             body: JSON.stringify({ user_id: idea.user_id, idea_id: idea._id })
         });
         const deletedIdeaResponse = await deletedIdea.json();
-        if(deletedIdeaResponse.success == false) {
-            return res.status(400).json({ errors: deletedIdeaResponse.error });
+
+        if (!deletedIdeaResponse.success) {
+            return res.status(400).json({ errors: deletedIdeaResponse.message });
         }
         // ✅ Only access user_id if idea is not null
         const user = await User.findById(idea.user_id);

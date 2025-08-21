@@ -17,6 +17,7 @@ import Feedback from "./pages/Feedback/Feedback";
 import Profile from "./pages/Profile/Profile";  
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ResetPassword from "./pages/Auth/ResetPassword";
+import Chatbot from "./pages/Chatbot/Chatbot";
 
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
@@ -94,6 +95,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Feedback />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/idea/chatbot/:id"
+            element={
+              <ProtectedRoute>
+                <Chatbot/>
               </ProtectedRoute>
             }
           />

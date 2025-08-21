@@ -21,7 +21,9 @@ def getfeedback(req: ImproveRequest):
             return {"success": False, "error": "Missing data or scores"}
 
         feedback = feedback_idea(req.data, req.scores)
-        # memory.update_feedback(req.user_id, req.idea_id, feedback)
+        uf=memory.update_feedback(req.user_id, req.idea_id, feedback)
+        if(uf==False):
+            return {"success": False, "error": "Error in updating feedback in MemoryStore"}
         return {
             "success": True,
             "feedback": json.loads(feedback),  # Convert feedback

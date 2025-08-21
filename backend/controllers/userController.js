@@ -8,7 +8,7 @@ const Idea = require('../models/Idea');
 const register = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        console.log("Register Request Body:", req.body);
+        // console.log("Register Request Body:", req.body);
 
         if ( !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
@@ -43,20 +43,20 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        console.log("Login Email:", email);
-        console.log("Login Password (raw):", password);
+        // console.log("Login Email:", email);
+        // console.log("Login Password (raw):", password);
 
         const user = await User.findOne({ email });
-        console.log("User found in DB:", user);
+        // console.log("User found in DB:", user);
 
         if (!user) {
         return res.status(400).json({ message: 'NO USER FOUND' });
         }
 
-        console.log("Stored Hashed Password:", user.password);
+        // console.log("Stored Hashed Password:", user.password);
 
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log("Password Match:", isMatch);
+        // console.log("Password Match:", isMatch);
 
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials - Wrong password' });
@@ -125,14 +125,14 @@ const deleteUser = async (req, res, next) => {
             return res.status(404).json({success: false, message: 'No user found' });
         }
         if(user.ideas.length > 0) {
-            const deletedIdeas =await fetch(`${process.env.FASTAPI_URL}/api/delete-all-ideas`, {
+            const deletedIdeas = await fetch(`${process.env.FASTAPI_URL}/api/delete-all-ideas`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user_id: req.params.user_id })
             });
             const deletedIdeasResponse = await deletedIdeas.json();
-            if(deletedIdeasResponse.success == false) {
-                return res.status(400).json({ success: false, errors: deletedIdeasResponse.error });
+            if (!deletedIdeasResponse.success) {
+                return res.status(400).json({ success: false, errors: deletedIdeasResponse.message });
             }
             await Idea.deleteMany({ _id: { $in: user.ideas } });
             user.ideas = [];

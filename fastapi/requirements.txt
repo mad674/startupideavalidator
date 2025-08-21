@@ -2,8 +2,9 @@ fastapi
 uvicorn
 langchain
 openai
-chromadb
 sentence-transformers
 python-multipart
 pydantic
 fpdf
+httpx
+--upgrade pinecone

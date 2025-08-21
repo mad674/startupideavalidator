@@ -19,12 +19,13 @@ def getsuggestions(request: SuggestionRequest):
         if not request.data or not request.scores:
             return {"success": False, "error": "Missing data or scores"}
         suggestions=suggest_improvements(request.data, request.scores)
-        # memory.update_suggestions(request.user_id, request.idea_id, suggestions)
+        us=memory.update_suggestions(request.user_id, request.idea_id, suggestions)
+        if(us==False):
+            return {"success": False, "error": "Error in updating suggestions in MemoryStore"}
         return {
             "success": True,
             "suggestions": json.loads(suggestions) # Convert suggestions
         }
-        
     except Exception as e:
         import traceback
         traceback.print_exc()

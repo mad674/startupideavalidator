@@ -1,129 +1,380 @@
-import chromadb
-from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
-from datetime import datetime
+import os
 import json
+from datetime import datetime
+from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+from pinecone import Pinecone, ServerlessSpec
 
+# ------------------ Load Environment Variables ------------------
+load_dotenv()
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_ENV = os.getenv("PINECONE_ENV", "us-east1-gcp")
+INDEX_NAME = "startup"
+MAX_METADATA_SIZE = 40000  # 40 KB limit
+MAX_CHAT_HISTORY = 50       # Keep last 50 messages
+MAX_FIELD_LENGTH = 2000     # 2 KB limit
+# ------------------ MemoryStore Class ------------------
 class MemoryStore:
     def __init__(self):
-        self.client = chromadb.Client(Settings(anonymized_telemetry=False))
-        self.collection = self.client.get_or_create_collection("startup_ideas")
+        self.client = Pinecone(api_key=PINECONE_API_KEY)
+        
+        # Create index if it doesn't exist
+        if INDEX_NAME not in self.client.list_indexes().names():
+            self.client.create_index(
+                name=INDEX_NAME,
+                dimension=384,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="gcp", region=PINECONE_ENV)
+            )
+
+        self.index = self.client.Index(INDEX_NAME)
+        self.store = {}  # In-memory store
         self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
-    def store_idea(self, user_id, idea_id, idea_text, idea_name, scores):
-        """
-        Stores a new idea in the vector DB.
-        idea_text = dict with problem_statement, solution, target_market, business_model
-        """
-        # print("\n[DEBUG][store_idea]")
-        # print(f"User ID: {user_id}")
-        # print(f"Idea ID: {idea_id}")
-        # # print(f"Data Keys: {list(data.keys())}")
-        # print(f"Scores: {scores}")
+    # Serialize metadata (dict/list -> JSON)
+    def _serialize_metadata(self, meta_dict):
+        serialized = {}
+        for k, v in meta_dict.items():
+            if isinstance(v, (dict, list)):
+                serialized[k] = json.dumps(v)
+            else:
+                serialized[k] = v
+        return serialized
+    def _truncate_metadata(self, metadata):
+    # import json
+        MAX_SIZE = 40000  # leave some buffer
+        serialized = json.dumps(metadata)
+        if len(serialized.encode("utf-8")) > MAX_SIZE:
+            # Simple truncation: remove chat history first
+            metadata["chat_history"] = []
+            serialized = json.dumps(metadata)
+            if len(serialized.encode("utf-8")) > MAX_SIZE:
+                # truncate other fields if necessary
+                metadata["structured"] = {"problem_statement": metadata["structured"].get("problem_statement","")}
+        return metadata
+
+    # Deserialize metadata
+    def _deserialize_metadata(self, meta_dict):
+        deserialized = {}
+        for k, v in meta_dict.items():
+            try:
+                deserialized[k] = json.loads(v)
+            except:
+                deserialized[k] = v
+        return deserialized
+
+    # ------------------ Store a new idea ------------------
+    def store_idea(self, user_id, idea_id, idea_text, idea_name, scores,
+           feedbacks=None, suggestions=None, chat_history=None):
         try:
             combined_text = (
                 f"Name: {idea_name}\n"
-                f"Problem: {idea_text['problem_statement']}\n"
-                f"Solution: {idea_text['solution']}\n"
-                f"Target Market: {idea_text['target_market']}\n"
-                f"Business Model: {idea_text['business_model']}\n"
-                f"Team: {idea_text['team']}"
+                f"Problem: {idea_text.get('problem_statement','')}\n"
+                f"Solution: {idea_text.get('solution','')}\n"
+                f"Target Market: {idea_text.get('target_market','')}\n"
+                f"Business Model: {idea_text.get('business_model','')}\n"
+                f"Team: {idea_text.get('team','')}"
             )
-
-            # Avoid duplicates for the same user
-            results = self.collection.get(where={"user_id": user_id}, include=["documents", "metadatas"])
-            if not results["metadatas"]:   # ✅ Prevent index error
-                pass  # no existing ideas, continue to add
-
-            else:
-                doc = results["metadatas"][-1]
-                if doc['name'] == idea_name :#and json.loads(doc['structured']) == idea_text:
-                    return False  # already exists
             embedding = self.embedder.encode(combined_text).tolist()
 
-            self.collection.add(
-                ids=[idea_id],
-                embeddings=[embedding],
-                documents=[combined_text],
-                metadatas=[{
-                    "user_id": user_id,
-                    "name": idea_name,
-                    "scores": scores,
-                    "structured": json.dumps(idea_text),       # ✅ store full structured data          # ✅ initialize empty suggestions
-                    "timestamp": datetime.now().isoformat()
-                }]
+            # Ensure defaults
+            feedbacks = feedbacks or []
+            suggestions = suggestions or []
+            chat_history = chat_history or []
+
+            metadata = self._serialize_metadata({
+                "user_id": user_id,
+                "name": idea_name,
+                "structured": json.dumps(idea_text),
+                "scores": json.dumps(scores),
+                "feedbacks": json.dumps(feedbacks),
+                "suggestions": json.dumps(suggestions),
+                "chat_history": json.dumps(chat_history),
+                "timestamp": datetime.now().isoformat(),
+                "document": combined_text
+            })
+            # metadata = self._truncate_metadata(metadata) or {}
+            metadata = self._truncate_metadata(metadata) or {} 
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": embedding, "metadata": metadata}]
             )
             return True
         except Exception as e:
-            print("Error in store_idea:", e)
+            print(f"[ERROR] store_idea failed: {e}")
             return False
-
-    def get_last_idea(self, user_id):
-        results = self.collection.get(where={"user_id": user_id}, limit=1)
-        if results["documents"]:
-            meta = results["metadatas"][0]
-            return {
-                "idea": results["documents"][0],
-                "structured": json.loads(meta.get("structured", {})),
-                "scores": meta.get("scores", ""),
-                # "feedback": meta.get("feedback", ""),
-                # "suggestions": meta.get("suggestions", ""),
-            }
-        return None
-
+    # ------------------ Get all ideas for a user ------------------
     def get_all_ideas(self, user_id):
-        results = self.collection.get(where={"user_id": user_id})
-        ideas = []
-        for doc, meta, idea_id in zip(results["documents"], results["metadatas"], results["ids"]):
-            ideas.append({
-                "idea_id": idea_id,
-                "idea": doc,
-                "structured": json.loads(meta.get("structured", {})),
-                "scores": meta.get("scores", ""),
-                # "feedback": meta.get("feedback", ""),
-                # "suggestions": meta.get("suggestions", ""),
-                "timestamp": meta["timestamp"]
-            })
-        return sorted(ideas, key=lambda x: x["timestamp"], reverse=True)
+        try:
+            dummy_vector = [0.0] * 384
+            result = self.index.query(
+                vector=dummy_vector,
+                top_k=1000,
+                include_metadata=True
+            )
+            ideas = []
+            for match in result.matches:
+                meta = match.metadata or {}  # ✅ Ensure it's a dict
+                meta = self._deserialize_metadata(meta)
+                if meta.get("user_id") != user_id:
+                    continue
+                ideas.append({
+                    "idea_id": match.id,
+                    "idea": meta.get("document", ""),
+                    "structured": meta.get("structured", {}),
+                    "scores": meta.get("scores", {}),
+                    "feedbacks": meta.get("feedbacks", []),
+                    "suggestions": meta.get("suggestions", []),
+                    "chat_history": meta.get("chat_history", []),
+                    "timestamp": meta.get("timestamp", "")
+                })
+            return sorted(ideas, key=lambda x: x["timestamp"], reverse=True)
+        except Exception as e:
+            print(f"[ERROR] get_all_ideas failed: {e}")
+            return []
 
-    def search_similar_idea(self, user_id, query, top_k=1):
-        embedding = self.embedder.encode(query)
-        results = self.collection.query(
-            query_embeddings=[embedding.tolist()],
-            n_results=top_k,
-            where={"user_id": user_id}
-        )
-        if results and results["documents"]:
-            return results["documents"][0][0]
-        return None
+    # ------------------ Generic update metadata ------------------
+    def _update_metadata(self, idea_id, update_fn):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
+            update_fn(meta)
+            meta["timestamp"] = datetime.now().isoformat()
 
-    def delete_idea(self, user_id, idea_id):
-        results = self.collection.get(ids=[idea_id], where={"user_id": user_id})
-        if results["documents"]:
-            self.collection.delete(ids=[idea_id])
-            return True
-        return False
-
-    def update_idea(self, user_id, idea_id, new_data):
-        results = self.collection.get(ids=[idea_id], where={"user_id": user_id})
-        if results["documents"]:
-            existing_doc = results["documents"][0]
-            existing_meta = results["metadatas"][0]
-
-            updated_doc = existing_doc + "\n" + new_data
-            updated_embedding = self.embedder.encode(updated_doc).tolist()
-
-            self.collection.update(
-                ids=[idea_id],
-                embeddings=[updated_embedding],
-                documents=[updated_doc],
-                metadatas=[{
-                    **existing_meta,
-                    "timestamp": datetime.now().isoformat()
-                }]
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
             )
             return True
-        return False
+        except Exception as e:
+            print(f"[ERROR] _update_metadata failed: {e}")
+            return False
+    # ------------------ Update feedback ------------------
+    def update_feedback(self, user_id, idea_id, feedback):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
 
-    
+            feedbacks = json.loads(meta.get("feedbacks", "[]"))
+            feedbacks.append(feedback)
+            meta["feedbacks"] = json.dumps(feedbacks)
+            meta["timestamp"] = datetime.now().isoformat()
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
+            )
+            return True
+        except Exception as e:
+            print(f"[ERROR] update_feedback failed: {e}")
+            return False
+    # ------------------ Update suggestions ------------------
+    def update_suggestions(self, user_id, idea_id, suggestions):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
+
+            meta["suggestions"] = json.dumps(suggestions)
+            meta["timestamp"] = datetime.now().isoformat()
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
+            )
+            return True
+        except Exception as e:
+            print(f"[ERROR] update_suggestions failed: {e}")
+            return False
+        # ------------------ Update scores ------------------
+    def update_scores(self, user_id, idea_id, scores):
+        return self._update_metadata(
+            idea_id,
+            lambda m: m.update({"scores": json.dumps(scores)})
+        )
+
+    # ------------------ Delete an idea ------------------
+    def delete_idea(self, user_id, idea_id):
+        try:
+            self.index.delete(ids=[idea_id])
+            if user_id in self.store and idea_id in self.store[user_id]:
+                del self.store[user_id][idea_id]
+                if not self.store[user_id]:
+                    del self.store[user_id]
+
+            return True
+        except Exception as e:
+            print(f"[ERROR] delete_idea failed: {e}")
+            return False
+
+    def get_idea(self, user_id, idea_id):
+        try:
+            # First try local store
+            if user_id in self.store and idea_id in self.store[user_id]:
+                return self.store[user_id][idea_id]
+
+            # Otherwise fetch from Pinecone
+            res = self.index.fetch(ids=[idea_id])   # ✅ correct usage
+            vector = res.vectors.get(idea_id, None) # ✅ FetchResponse.vectors is a dict
+            if not vector:
+                return None
+
+            metadata = vector.metadata
+
+            # ✅ Always parse JSON safely
+            def parse_json_safe(val, default):
+                if isinstance(val, str):
+                    try:
+                        return json.loads(val)
+                    except Exception:
+                        return default
+                return val if val is not None else default
+
+            structured   = parse_json_safe(metadata.get("structured"), {})
+            chat_history = parse_json_safe(metadata.get("chat_history"), [])
+            scores       = parse_json_safe(metadata.get("scores"), {})
+            feedbacks    = parse_json_safe(metadata.get("feedbacks"), [])
+            suggestions  = parse_json_safe(metadata.get("suggestions"), [])
+
+            idea = {
+                "idea_id": idea_id,
+                "user_id": user_id,
+                "structured": structured,
+                "chat_history": chat_history,   # ✅ Always a list now
+                "scores": scores,
+                "feedbacks": feedbacks,
+                "suggestions": suggestions,
+                "timestamp": metadata.get("timestamp", ""),
+                "embedding": vector.values
+            }
+
+            # Cache locally for faster access later
+            if user_id not in self.store:
+                self.store[user_id] = {}
+            self.store[user_id][idea_id] = idea
+
+            return idea
+
+        except Exception as e:
+            print(f"[ERROR] get_idea failed: {e}")
+            return None
+
+    def get_ideas(self, user_id):
+        """
+        Return all ideas for a user as a dict {idea_id: idea_data}.
+        Fetches from local cache first, otherwise from the index.
+        """
+        # Return from local cache if available
+        if user_id in self.store:
+            return self.store[user_id]
+
+        # Fetch all vectors for this user from the index
+        try:
+            # Chroma/Pinecone: use a metadata filter
+            res = self.index.query(
+                filter={"user_id": user_id},
+                include_metadata=True,
+                include_values=False  # don't fetch embeddings if not needed
+            )
+
+            ideas = {}
+            for vector in res['matches']:  # Chroma returns matches
+                idea_id = vector['id']
+                metadata = vector['metadata']
+
+                # Parse structured fields safely
+                idea = {
+                    "idea_id": idea_id,
+                    "user_id": user_id,
+                    "structured": metadata.get("structured", {}),
+                    "chat_history": metadata.get("chat_history", []),
+                    "scores": metadata.get("scores", {}),
+                    "feedbacks": metadata.get("feedbacks", []),
+                    "suggestions": metadata.get("suggestions", []),
+                    "timestamp": metadata.get("timestamp", ""),
+                    "embedding": None  # optional, fetch separately if needed
+                }
+
+                # Cache locally
+                if user_id not in self.store:
+                    self.store[user_id] = {}
+                self.store[user_id][idea_id] = idea
+
+                ideas[idea_id] = idea
+
+            return ideas
+        except Exception as e:
+            print(f"[ERROR] get_ideas failed: {e}")
+            return {}
+
+    def update_idea(self, user_id, idea_id, updated_fields=None, append_chat=None):
+        try:
+            # Fetch idea (from local cache or Pinecone)
+            idea = self.get_idea(user_id, idea_id)
+            if not idea:
+                return False
+
+            # ✅ Update structured fields
+            structured = idea.get("structured", {})
+            if updated_fields:
+                structured.update(updated_fields)
+
+            # ✅ Ensure chat_history is a list
+            chat_history = idea.get("chat_history", [])
+            if isinstance(chat_history, str):
+                chat_history = json.loads(chat_history)
+
+            # ✅ Append new chat messages
+            if append_chat:
+                chat_history.extend(append_chat)
+                chat_history = chat_history[-MAX_CHAT_HISTORY:] 
+
+            # ✅ Rebuild updated idea
+            updated_idea = {
+                **idea,
+                "structured": structured,
+                "chat_history": chat_history,
+                "scores": idea.get("scores", {}),
+                "feedbacks": idea.get("feedbacks", []),
+                "suggestions": idea.get("suggestions", []),
+                "timestamp": datetime.now().isoformat()
+            }
+
+            # ✅ Update local store
+            if user_id not in self.store:
+                self.store[user_id] = {}
+            self.store[user_id][idea_id] = updated_idea
+
+            # ✅ Serialize metadata for Pinecone
+            metadata = {
+                "user_id": user_id,
+                "structured": json.dumps(structured),
+                "chat_history": json.dumps(chat_history),
+                "scores": json.dumps(updated_idea["scores"]),
+                "feedbacks": json.dumps(updated_idea["feedbacks"]),
+                "suggestions": json.dumps(updated_idea["suggestions"]),
+                "timestamp": updated_idea["timestamp"]
+            }
+            
+            metadata = self._truncate_metadata(metadata) or {}
+            if metadata is None:
+                metadata = {}
+            # ✅ Push to Pinecone
+            self.index.upsert([
+                {
+                    "id": idea_id,
+                    "values": updated_idea.get("embedding", []),
+                    "metadata": metadata
+                }
+            ])
+
+            return True
+        except Exception as e:
+            print(f"[ERROR] update_idea failed: {e}")
+            return False
 

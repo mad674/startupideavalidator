@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 # from fastapi.routes import feedback, suggestion
-from routes import chatbot, validate,pdf,feedback,suggestion,scores,deleteidea
+# from fastapi.routes import chatbot
+# from fastapi.routes import chatbots
+from routes import validate,pdf,feedback,suggestion,scores,deleteidea,chatbot
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -19,6 +21,8 @@ app.include_router(feedback.router, prefix="/api")
 app.include_router(suggestion.router, prefix="/api")  
 app.include_router(scores.router,prefix="/api")
 app.include_router(deleteidea.router,prefix="/api")
+app.include_router(chatbot.router, prefix="/api")
+
 @app.get("/")
 def root():
     return {"message": "Startup Validator Backend is running 🚀"}

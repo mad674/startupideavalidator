@@ -64,25 +64,25 @@ export default function IdeaDetail() {
 
       
       <div className="meta">
-        <h2>Score :</h2>
-        <strong>Technical Feasibility : </strong>{idea.score?.["Technical Feasibility"] ?? "—"}<br/>
-        <strong>Market Size : </strong>{idea.score?.["Market Size"] ?? "—"}<br/>
-        <strong>Revenue Model : </strong>{idea.score?.["Revenue Model"] ?? "—"}<br/>
-        <strong>Uniqueness : </strong>{idea.score?.["Uniqueness"] ?? "—"}<br/>
-        <strong>Team Strength : </strong>{idea.score?.["Team Strength"] ?? "—"}<br/>
-        <strong>Average Score : </strong>{idea.score?.["Average Score"] ?? "—"}<br/>
+        <h2>AI Score :</h2>
+        <strong>Technical Feasibility : </strong>{idea.score?.["Technical Feasibility"]+" / 5" ?? "—"}<br/>
+        <strong>Market Size : </strong>{idea.score?.["Market Size"] +" / 5"?? "—"}<br/>
+        <strong>Revenue Model : </strong>{idea.score?.["Revenue Model"]+" / 5" ?? "—"}<br/>
+        <strong>Uniqueness : </strong>{idea.score?.["Uniqueness"] +" / 5"?? "—"}<br/>
+        <strong>Team Strength : </strong>{idea.score?.["Team Strength"]+" / 5" ?? "—"}<br/>
+        <strong>Average Score : </strong>{idea.score?.["Average Score"]+" / 5" ?? "—"}<br/>
         <strong>Overall Viability : </strong>{idea.score?.["Overall Viability"] ?? "Not available"}<br/>
       </div>
 
       <div className="idea-actions">
         <button onClick={() => navigate(`/idea/suggestions/${id}`)}>
-          Suggestions
+          AI Suggestions
         </button>
         <button onClick={() => navigate(`/idea/feedback/${id}`)}>
-          Feedback
+          AI Feedback
         </button>
         <button onClick={() => navigate(`/idea/chatbot/${id}`)}>
-          Chatbot
+          AI Chatbot
         </button>
         <button onClick={() => navigate(`/idea/updateidea/${id}`)}>
           Update Idea
