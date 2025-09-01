@@ -9,5 +9,4 @@ fpdf
 httpx
 pinecone
 crypto
-# google-generativeai
-# langchain-huggingface
+
