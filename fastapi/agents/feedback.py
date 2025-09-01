@@ -1,8 +1,8 @@
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
+from utils.encrypt import decrypt_api_key
 import os
-from dotenv import load_dotenv
 
 prompt_template = """
 You're an AI startup advisor.
@@ -29,17 +29,18 @@ Respond ONLY in valid JSON format:
 }}
 """
 
-load_dotenv()
-llm = ChatOpenAI(
-    model="llama3-70b-8192", 
-    temperature=0.6,
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base=os.getenv("OPENAI_API_BASE"),
-)
-feedback_prompt = PromptTemplate.from_template(prompt_template)
-feedback_chain = feedback_prompt | llm
 
-def feedback_idea(structured_idea: str, scores: str):
+feedback_prompt = PromptTemplate.from_template(prompt_template)
+# feedback_chain = feedback_prompt | llm
+
+def feedback_idea(api,structured_idea: str, scores: str):
+    llm = ChatOpenAI(
+        model=api["model_name"], 
+        temperature=api["temperature"],
+        openai_api_key=decrypt_api_key(api["apikey"]),
+        openai_api_base=api["provider_url"],
+    )
+    feedback_chain = feedback_prompt | llm
     return feedback_chain.invoke({
         "idea": structured_idea,
         "scores": scores

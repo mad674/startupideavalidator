@@ -122,3 +122,17 @@
     padding: 10px 12px;
   }
 }
+.typing-cursor {
+  display: inline-block;
+  width: 8px;
+  margin-left: 2px;
+  background-color: black;
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+

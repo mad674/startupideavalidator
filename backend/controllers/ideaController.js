@@ -5,11 +5,18 @@ const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 // const { get } = require('mongoose');
 const jwt = require('jsonwebtoken');
+
+// const { encryptApiKey, decryptApiKey } = require('../utils/encrypt');
 dotenv.config();
 
 const validate=async(user_id, name, problem_statement, solution, target_market, business_model,team,token)=>{
     try{
         token=token.split(' ')[1];
+        const user=await User.findById(user_id);
+        const api=user.api;
+        if(!api || api.length==0) {
+            return false;
+        }
         const validateidea=await fetch(`${process.env.FASTAPI_URL}/api/validate`, {
             method: 'POST',
             headers: {
@@ -23,7 +30,10 @@ const validate=async(user_id, name, problem_statement, solution, target_market, 
                 solution,
                 target_market,
                 team,
-                business_model}),
+                business_model,
+                api: api,
+            }),
+            // api_key: api_key
         });
         const validateResponse = await validateidea.json();
         // console.log('validateResponse:', validateResponse);
@@ -39,6 +49,11 @@ const calculatescore=async(user_id, savedIdea, token)=> {
         // print("token:",token);
         // print("user_id:",user_id);
         // print("savedIdea:",savedIdea._id);
+        const user=await User.findById(user_id);
+        const api=user.api;
+        if(!api || api.length==0) {
+            return false;
+        }
         const getscore=await fetch(`${process.env.FASTAPI_URL}/api/getscore`, {
             method: 'POST',
             headers: {
@@ -49,7 +64,9 @@ const calculatescore=async(user_id, savedIdea, token)=> {
                 user_id: user_id,
                 idea_id: savedIdea._id,
                 data: savedIdea.data,
+                api: api,
             }),
+            // api_key: api_key
         })
         const getscoreResponse = await getscore.json();
         if(getscoreResponse.success == false) {
@@ -115,12 +132,14 @@ const submitIdea=async (req, res, next)=> {
         }
         const getscore=await calculatescore(user_id, savedIdea, req.headers.authorization);
         if(!getscore) {
+            await Idea.deleteOne({ _id: savedIdea._id });
             return res.status(500).json({ success: false, message: 'IDEA ALREADY EXISTS' });    
         }
         // console.log('getscore:', getscore);
         // console.log('updatedIdea:', updatedIdea);
         const getuser = await User.findOne({ _id: user_id});
         if (!getuser) {
+            await Idea.deleteOne({ _id: savedIdea._id });
             return res.status(404).json({success: false, message: 'User not found' });
         }
         getuser.ideas.push(idea._id.toString());
@@ -139,6 +158,12 @@ const getsuggestions=async(req, res, next)=> {
         if (!idea) {
             return res.status(404).json({ success: false, message: 'Idea not found' });
         }
+        const user=await User.findById(idea.user_id);
+        const api=user.api;
+        // console.log('suggestions:', api_key);
+        if(!api || api.length==0) {
+            return res.status(400).json({ success: false, message: 'API key not set' });
+        }
         const suggestions = await fetch(`${process.env.FASTAPI_URL}/api/suggestions`, {
             method: 'POST',
             headers: {
@@ -146,13 +171,14 @@ const getsuggestions=async(req, res, next)=> {
                 'authorization': `${req.headers.authorization}`,
             },
             body: JSON.stringify({
-                user_id: idea.user_id,
-                idea_id: idea._id,
+                user_id: idea.user_id.toString(),
+                idea_id: idea._id.toString(),
                 data: idea.data,
                 scores: idea.score,
+                api: api,
             }),
         });
-        // console.log('suggestions:', suggestions);
+        
         const suggestionResponse = await suggestions.json();
         // console.log('suggestionResponse:', suggestionResponse);
         if (suggestionResponse.success == false) {
@@ -177,6 +203,11 @@ const getfeedback=async(req, res, next)=> {
         if (!idea) {
             return res.status(404).json({ message: 'Idea not found' });
         }
+        const user=await User.findById(idea.user_id);
+        const api=user.api;
+        if(!api || api.length==0) {
+            return res.status(400).json({ success: false, message: 'API key not set' });
+        }
         const feedback =await fetch(`${process.env.FASTAPI_URL}/api/feedback`, {
             method: 'POST',
             headers: {
@@ -188,7 +219,9 @@ const getfeedback=async(req, res, next)=> {
                 idea_id: idea._id,
                 data: idea.data,
                 scores: idea.score,
+                api:api,
             }),
+            // api_key: api_key
         });
         const feedbackResponse = await feedback.json();
         if (feedbackResponse.success==false) {

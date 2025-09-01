@@ -12,14 +12,16 @@ class SuggestionRequest(BaseModel):
     idea_id: str
     data: dict  
     scores: dict
+    api: dict
 
 @router.post("/suggestions")
 def getsuggestions(request: SuggestionRequest):
     try:
-        if not request.data or not request.scores:
+        if not request.data or not request.api or not request.scores:
             return {"success": False, "error": "Missing data or scores"}
-        suggestions=suggest_improvements(request.data, request.scores)
+        suggestions=suggest_improvements(request.api,request.data, request.scores)
         us=memory.update_suggestions(request.user_id, request.idea_id, suggestions)
+        # print("suggestions result:", suggestions)
         if(us==False):
             return {"success": False, "error": "Error in updating suggestions in MemoryStore"}
         return {

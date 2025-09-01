@@ -238,8 +238,8 @@ class MemoryStore:
             structured   = parse_json_safe(metadata.get("structured"), {})
             chat_history = parse_json_safe(metadata.get("chat_history"), [])
             scores       = parse_json_safe(metadata.get("scores"), {})
-            feedbacks    = parse_json_safe(metadata.get("feedbacks"), [])
-            suggestions  = parse_json_safe(metadata.get("suggestions"), [])
+            feedbacks    = parse_json_safe(metadata.get("feedbacks"), {})
+            suggestions  = parse_json_safe(metadata.get("suggestions"), {})
 
             idea = {
                 "idea_id": idea_id,

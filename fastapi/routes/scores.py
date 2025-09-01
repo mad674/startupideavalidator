@@ -13,6 +13,7 @@ class ValidateRequest(BaseModel):
     user_id:str
     idea_id:str
     data:dict
+    api:dict
 
 @router.post("/getscore")
 def getscore(req: ValidateRequest):
@@ -24,7 +25,7 @@ def getscore(req: ValidateRequest):
     #     "business_model": request.business_model if request.business_model else "No Business Model Provided",
     #     "team": request.team   if request.team else "No Team Provided",
     # }
-    scores = score_idea(req.data)
+    scores = score_idea(req.api,req.data)
     # suggestions = suggest_improvements(data, scores)
     res=memory.store_idea(
         req.user_id,

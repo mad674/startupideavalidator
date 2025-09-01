@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Settings.css";
+import { Link } from "react-router-dom";
 
 export default function Settings() {
   // const [email, setEmail] = useState("");
@@ -131,7 +132,7 @@ export default function Settings() {
         </button>
 
         <hr />
-
+        <button><Link to="/api_key">change api key</Link></button>
         <h3>Delete All My Ideas</h3>
         <button
           onClick={handleDeleteAllIdeas}

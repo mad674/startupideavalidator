@@ -48,6 +48,40 @@ export default function IdeaDetail() {
     }
   }
 
+  const handleDownload = async () => {
+  try {
+    const response = await fetch(`${process.env.REACT_APP_FASTAPI}/api/pdf`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        idea_id: atob(id),
+        user_id: idea.user_id
+      }),
+    });
+    
+    if (!response.ok) {
+      alert("Failed to generate PDF");return;
+    }
+    // Convert to blob
+    const blob = await response.blob();
+
+    // Create a download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${idea.data.name}_report.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("PDF download failed", err);
+  }
+  };
+
+
+
   if (loading) return <p>Loading...</p>;
   if (!idea) return <p>No idea found.</p>;
 
@@ -73,7 +107,7 @@ export default function IdeaDetail() {
         <strong>Average Score : </strong>{idea.score?.["Average Score"]+" / 5" ?? "—"}<br/>
         <strong>Overall Viability : </strong>{idea.score?.["Overall Viability"] ?? "Not available"}<br/>
       </div>
-
+      
       <div className="idea-actions">
         <button onClick={() => navigate(`/idea/suggestions/${id}`)}>
           AI Suggestions
@@ -91,6 +125,7 @@ export default function IdeaDetail() {
           Delete Idea
         </button>
       </div>
+      <button onClick={handleDownload}>📥 Download Report</button>;
     </div>
   );
 }

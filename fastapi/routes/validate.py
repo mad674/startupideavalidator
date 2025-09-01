@@ -17,6 +17,7 @@ class ValidateRequest(BaseModel):
     target_market: str
     business_model: str
     team: str
+    api: dict
 
 @router.post("/validate")
 def validate(request: ValidateRequest):
@@ -28,7 +29,9 @@ def validate(request: ValidateRequest):
         "business_model": request.business_model if request.business_model else "No Business Model Provided",
         "team": request.team   if request.team else "No Team Provided",
     }
-    if "no" == validate_idea(data):
+    result=validate_idea(request.api,data)
+    # print("Validation result:", result)
+    if "no" == result:
         return {
             # "res":validate_idea(data),
             "success": False,

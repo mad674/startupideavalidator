@@ -15,8 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(validate.router,prefix="/api")
-# app.include_router(pdf.router,prefix="/api")
-# app.include_router(chatbot.router,prefix="/api")  
+app.include_router(pdf.router,prefix="/api") 
 app.include_router(feedback.router, prefix="/api")
 app.include_router(suggestion.router, prefix="/api")  
 app.include_router(scores.router,prefix="/api")

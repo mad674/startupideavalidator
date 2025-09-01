@@ -9,7 +9,7 @@ export default function Navbar({ onLogout }) {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <Link to="/dashboard">🚀 Startup Validator</Link>
+        <Link to="/dashboard">🚀 AI Startup Validator</Link>
       </div>
 
       <div className="navbar-links">

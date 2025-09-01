@@ -1,12 +1,12 @@
-// src/pages/Chatbot/Chatbot.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./Chatbot.css";
 
 export default function Chatbot() {
   const { id } = useParams();
   const ideaId = id ? atob(id) : "unknown_idea";
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : "";
   const auth_token = `Bearer ${token || ""}`;
 
   // safe parse userId from token (best-effort)
@@ -20,143 +20,135 @@ export default function Chatbot() {
     console.warn("Unable to parse token payload", e);
   }
 
-  const [messages, setMessages] = useState([]); // { id, sender: 'user'|'bot', text, typing }
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [apiKey, setApiKey] = useState(null);
   const ws = useRef(null);
   const messagesEndRef = useRef(null);
-  const currentBotIdRef = useRef(null);
 
+  // Step 1: fetch API key first
   useEffect(() => {
+    const fetchApiKey = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.REACT_APP_BACKEND}/user/getuserapikey/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch user details");
+        const data = await res.json();
+        setApiKey(data.api);
+      } catch (err) {
+        console.error("API key fetch failed:", err);
+      }
+    };
+
+    fetchApiKey();
+  }, [userId, token]);
+
+  // Step 2: once apiKey is ready, open WebSocket
+  useEffect(() => {
+    if (!apiKey) return;
+
     ws.current = new WebSocket(`ws://localhost:8000/api/ws/chat`);
 
     ws.current.onopen = () => {
-      try {
-        ws.current.send(JSON.stringify({
+      ws.current.send(
+        JSON.stringify({
           user_id: userId,
           idea_id: ideaId,
           message: "Hi",
           auth_token,
-        }));
-      } catch (e) {
-        console.warn("WS send failed on open:", e);
-      }
+          api: apiKey,
+        })
+      );
     };
 
     ws.current.onmessage = (event) => {
-      let data;
+      let botMessage = "";
       try {
-        data = JSON.parse(event.data);
-      } catch (e) {
-        console.warn("Failed to parse WS event data:", e, event.data);
-        return;
-      }
-
-      if (!("response" in data)) return;
-      const resp = data.response;
-      const type = data.type || "final";
-      if (typeof resp !== "string") return;
-
-      if (type === "error") {
-        const errorId = `err-${Date.now()}`;
-        setMessages((prev) => [...prev, { id: errorId, sender: "bot", text: resp, typing: false }]);
-        currentBotIdRef.current = null;
-        return;
-      }
-
-      if (type === "stream") {
-        if (currentBotIdRef.current) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === currentBotIdRef.current ? { ...m, text: m.text + resp } : m))
-          );
-        } else {
-          const botId = `bot-${Date.now()}`;
-          currentBotIdRef.current = botId;
-          setMessages((prev) => [...prev, { id: botId, sender: "bot", text: resp, typing: true }]);
+        const data = JSON.parse(event.data);
+        // backend might send {message: "..."} or {text: "..."}
+        botMessage = data.message || data.text || event.data;
+        if (data.type === "final" && data.response) {
+          setMessages((prev) => [
+            ...prev,
+            { id: `bot-${Date.now()}`, sender: "bot", text: data.response },
+          ]);
         }
-        return;
+      } catch {
+        botMessage = event.data; // fallback if plain text
       }
 
-      if (type === "final") {
-        if (currentBotIdRef.current) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === currentBotIdRef.current ? { ...m, text: resp, typing: false } : m))
-          );
-          currentBotIdRef.current = null;
-        } else {
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last && last.sender === "bot" && last.text === resp) return prev;
-            const botId = `bot-${Date.now()}`;
-            return [...prev, { id: botId, sender: "bot", text: resp, typing: false }];
-          });
-        }
-        return;
-      }
-
-      // fallback
-      const botId = `bot-${Date.now()}`;
-      setMessages((prev) => [...prev, { id: botId, sender: "bot", text: resp, typing: false }]);
-      currentBotIdRef.current = null;
+      
     };
 
-    ws.current.onerror = (e) => {
-      console.error("WebSocket error:", e);
-      const errId = `err-${Date.now()}`;
-      setMessages((prev) => [...prev, { id: errId, sender: "bot", text: "WebSocket error", typing: false }]);
-    };
-
-    ws.current.onclose = () => {
-      // no-op
-    };
+    ws.current.onclose = () => console.warn("WebSocket closed");
+    ws.current.onerror = (err) => console.error("WebSocket error:", err);
 
     return () => {
-      try { ws.current.close(); } catch (e) {}
+      ws.current?.close();
     };
-    // include stable values so eslint -- if present -- is satisfied
-  }, [userId, ideaId, auth_token]);
+  }, [apiKey, ideaId, userId, auth_token]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
+  // Step 3: send messages
   const sendMessage = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !apiKey || !ws.current) return;
+
     const userMsgId = `user-${Date.now()}`;
-    setMessages((prev) => [...prev, { id: userMsgId, sender: "user", text: input, typing: false }]);
-    currentBotIdRef.current = null;
+    setMessages((prev) => [
+      ...prev,
+      { id: userMsgId, sender: "user", text: input },
+    ]);
 
-    const payload = { user_id: userId, idea_id: ideaId, message: input, auth_token };
-    try {
-      ws.current.send(JSON.stringify(payload));
-    } catch (e) {
-      console.error("Failed to send WS message:", e);
-      const errId = `err-${Date.now()}`;
-      setMessages((prev) => [...prev, { id: errId, sender: "bot", text: "Failed to send message", typing: false }]);
-    }
+    const payload = {
+      user_id: userId,
+      idea_id: ideaId,
+      message: input,
+      auth_token,
+      api: apiKey,
+    };
 
+    ws.current.send(JSON.stringify(payload));
     setInput("");
   };
 
-  const handleKeyPress = (e) => { if (e.key === "Enter") sendMessage(); };
+  // auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <div className="chat-container">
       <div className="chat-header">AI Idea Chatbot</div>
 
-      <div className="chat-messages" role="log" aria-live="polite">
+      <div className="chat-messages">
         {messages.map((msg) => (
           <div key={msg.id} className={`chat-message ${msg.sender}`}>
-            <div className="message-text">
-              {msg.text}{msg.typing && <span className="typing-cursor">|</span>}
-            </div>
+            <div className="message-text">{msg.text}</div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
       <div className="chat-input">
-        <input type="text" value={input} placeholder="Type your message..." onChange={(e) => setInput(e.target.value)} onKeyPress={handleKeyPress} aria-label="Type your message" />
-        <button onClick={sendMessage}>Send</button>
+        <input
+          type="text"
+          value={input}
+          placeholder={apiKey ? "Type your message..." : "Fetching API key..."}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          disabled={!apiKey}
+        />
+        <button onClick={sendMessage} disabled={!apiKey}>
+          Send
+        </button>
       </div>
     </div>
   );

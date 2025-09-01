@@ -123,18 +123,18 @@ export default function UpdateIdea() {
           />
         </label>
         <label>
-          Team:
-          <textarea
-            name="team"
-            value={formData.team}
-            onChange={handleChange}
-          />
-        </label>
-        <label>
           Business Model:
           <textarea
             name="business_model"
             value={formData.business_model}
+            onChange={handleChange}
+          />
+        </label>
+        <label>
+          Team:
+          <textarea
+            name="team"
+            value={formData.team}
             onChange={handleChange}
           />
         </label>

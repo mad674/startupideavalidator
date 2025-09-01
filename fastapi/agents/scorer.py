@@ -1,8 +1,9 @@
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
+from utils.encrypt import decrypt_api_key
 import os
-from dotenv import load_dotenv
+
 prompt_template = PromptTemplate.from_template("""
 You are a specialist startup evaluator. 
 
@@ -23,16 +24,18 @@ don't explain your reasoning, just return the JSON structure. no other text need
 Startup Idea:
 {structured_idea}
 """)
-load_dotenv()
-llm = ChatOpenAI(
-    model="llama3-70b-8192", 
-    temperature=0.7,
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base=os.getenv("OPENAI_API_BASE"),
-)
-scorer_chain = prompt_template | llm
 
-def score_idea(structured_idea):
+
+# scorer_chain = prompt_template | llm
+
+def score_idea(api,structured_idea):
+    llm = ChatOpenAI(
+        model=api["model_name"], 
+        temperature=api["temperature"],
+        openai_api_key=decrypt_api_key(api["apikey"]),
+        openai_api_base=api["provider_url"],
+    )
+    scorer_chain = prompt_template | llm
     return scorer_chain.invoke({"structured_idea": structured_idea}).content
 
 

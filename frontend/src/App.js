@@ -18,7 +18,8 @@ import Profile from "./pages/Profile/Profile";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import Chatbot from "./pages/Chatbot/Chatbot";
-
+import ApiKeyScreen from "./pages/ApiScreen/ApiKeyScreen";
+import ApiKeyForm from "./pages/ApiScreen/ApiKeyForm";
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
 
@@ -75,10 +76,20 @@ export default function App() {
             }
           />
           <Route
+            path="/api_key/"
+            element={
+              <ProtectedRoute>
+                <ApiKeyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/idea/updateidea/:id"
             element={
               <ProtectedRoute>
-                <UpdateIdea />
+                <ApiKeyScreen>
+                  <UpdateIdea />
+                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />
@@ -86,7 +97,9 @@ export default function App() {
             path="/idea/suggestions/:id"
             element={
               <ProtectedRoute>
+                <ApiKeyScreen>
                 <Suggestions />
+                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />
@@ -94,7 +107,9 @@ export default function App() {
             path="/idea/feedback/:id"
             element={
               <ProtectedRoute>
+                <ApiKeyScreen>
                 <Feedback />
+                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />
@@ -102,7 +117,9 @@ export default function App() {
             path="/idea/chatbot/:id"
             element={
               <ProtectedRoute>
+                <ApiKeyScreen>
                 <Chatbot/>
+                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />
@@ -118,7 +135,9 @@ export default function App() {
             path="/create"
             element={
               <ProtectedRoute>
+                <ApiKeyScreen>
                 <CreateIdea />
+                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />

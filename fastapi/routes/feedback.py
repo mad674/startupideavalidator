@@ -12,7 +12,8 @@ class ImproveRequest(BaseModel):
     user_id: str
     idea_id: str
     scores: dict
-    data: dict  # This should match the structure of your stored ideas
+    data: dict 
+    api: dict  # This should match the structure of your stored ideas
 
 @router.post("/feedback")
 def getfeedback(req: ImproveRequest):
@@ -20,7 +21,7 @@ def getfeedback(req: ImproveRequest):
         if not req.data or not req.scores:
             return {"success": False, "error": "Missing data or scores"}
 
-        feedback = feedback_idea(req.data, req.scores)
+        feedback = feedback_idea(req.api, req.data, req.scores)
         uf=memory.update_feedback(req.user_id, req.idea_id, feedback)
         if(uf==False):
             return {"success": False, "error": "Error in updating feedback in MemoryStore"}
