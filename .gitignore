@@ -10,7 +10,7 @@ __pycache__/
 
 # Ignore IDE/config files
 .vscode/
-.env
-backend/env
-fastapi/env
-frontend/env
+# .env
+# backend/env
+# fastapi/env
+# frontend/env
