@@ -4,7 +4,7 @@ from datetime import datetime
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
-
+import json 
 # ------------------ Load Environment Variables ------------------
 load_dotenv()
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -14,6 +14,16 @@ MAX_METADATA_SIZE = 40000  # 40 KB limit
 MAX_CHAT_HISTORY = 50       # Keep last 50 messages
 MAX_FIELD_LENGTH = 2000     # 2 KB limit
 # ------------------ MemoryStore Class ------------------
+def safe_json_load(data, default=None):
+    if not data:  # None or empty string
+        return default if default is not None else {}
+    if isinstance(data, str):
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return default if default is not None else {}
+    return data  # already dict or list
+
 class MemoryStore:
     def __init__(self):
         self.client = Pinecone(api_key=PINECONE_API_KEY)
@@ -65,8 +75,21 @@ class MemoryStore:
 
     # ------------------ Store a new idea ------------------
     def store_idea(self, user_id, idea_id, idea_text, idea_name, scores,
-           feedbacks=None, suggestions=None, chat_history=None):
+               feedbacks=None, suggestions=None, chat_history=None):
         try:
+            oldidea = self.get_idea(user_id, idea_id) or {}
+
+            # Skip storing if structured idea hasn't changed
+            if json.dumps(oldidea.get("structured", {}), sort_keys=True) == json.dumps(idea_text, sort_keys=True):
+                return False
+            scores = safe_json_load(scores, default={})
+            feedbacks = safe_json_load(feedbacks, default={})
+            suggestions = safe_json_load(suggestions, default={})
+            # Preserve old data, but ensure safe defaults
+            feedbacks = oldidea.get("feedbacks") or {}
+            suggestions = oldidea.get("suggestions") or {}
+            chat_history = oldidea.get("chat_history") or []
+
             combined_text = (
                 f"Name: {idea_name}\n"
                 f"Problem: {idea_text.get('problem_statement','')}\n"
@@ -76,11 +99,6 @@ class MemoryStore:
                 f"Team: {idea_text.get('team','')}"
             )
             embedding = self.embedder.encode(combined_text).tolist()
-
-            # Ensure defaults
-            feedbacks = feedbacks or []
-            suggestions = suggestions or []
-            chat_history = chat_history or []
 
             metadata = self._serialize_metadata({
                 "user_id": user_id,
@@ -93,16 +111,17 @@ class MemoryStore:
                 "timestamp": datetime.now().isoformat(),
                 "document": combined_text
             })
-            # metadata = self._truncate_metadata(metadata) or {}
-            metadata = self._truncate_metadata(metadata) or {} 
+            metadata = self._truncate_metadata(metadata) or {}
 
             self.index.upsert(
                 vectors=[{"id": idea_id, "values": embedding, "metadata": metadata}]
             )
             return True
+
         except Exception as e:
             print(f"[ERROR] store_idea failed: {e}")
             return False
+
     # ------------------ Get all ideas for a user ------------------
     def get_all_ideas(self, user_id):
         try:
@@ -160,9 +179,7 @@ class MemoryStore:
             vec = result.vectors[idea_id]
             meta = vec.metadata
 
-            feedbacks = json.loads(meta.get("feedbacks", "[]"))
-            feedbacks.append(feedback)
-            meta["feedbacks"] = json.dumps(feedbacks)
+            meta["feedbacks"] = json.dumps(feedback)
             meta["timestamp"] = datetime.now().isoformat()
 
             self.index.upsert(
@@ -316,13 +333,15 @@ class MemoryStore:
         try:
             # Fetch idea (from local cache or Pinecone)
             idea = self.get_idea(user_id, idea_id)
-            if not idea:
+            if idea is None:
                 return False
 
-            # ✅ Update structured fields
+            # ✅ Merge structured fields safely
             structured = idea.get("structured", {})
-            if updated_fields:
-                structured.update(updated_fields)
+            if isinstance(structured, str):
+                structured = json.loads(structured)
+            if updated_fields is not None:
+                structured.update(updated_fields)  # merge instead of replace
 
             # ✅ Ensure chat_history is a list
             chat_history = idea.get("chat_history", [])
@@ -330,19 +349,33 @@ class MemoryStore:
                 chat_history = json.loads(chat_history)
 
             # ✅ Append new chat messages
-            if append_chat:
+            if append_chat is not None:
                 chat_history.extend(append_chat)
-                chat_history = chat_history[-MAX_CHAT_HISTORY:] 
+                chat_history = chat_history[-MAX_CHAT_HISTORY:]  # keep recent N
 
             # ✅ Rebuild updated idea
+            combined_text = (
+                f"Name: {structured.get('name','')}\n"
+                f"Problem: {structured.get('problem_statement','')}\n"
+                f"Solution: {structured.get('solution','')}\n"
+                f"Target Market: {structured.get('target_market','')}\n"
+                f"Business Model: {structured.get('business_model','')}\n"
+                f"Team: {structured.get('team','')}\n"
+                f"Chat History: {' '.join([msg.get('content','') for msg in chat_history])}"
+            )
+
+            embedding = self.embedder.encode(combined_text).tolist()
+
             updated_idea = {
-                **idea,
+                "idea_id": idea_id,
+                "user_id": user_id,
                 "structured": structured,
                 "chat_history": chat_history,
                 "scores": idea.get("scores", {}),
-                "feedbacks": idea.get("feedbacks", []),
-                "suggestions": idea.get("suggestions", []),
-                "timestamp": datetime.now().isoformat()
+                "feedbacks": idea.get("feedbacks", {}),
+                "suggestions": idea.get("suggestions", {}),
+                "timestamp": datetime.now().isoformat(),
+                "embedding": embedding
             }
 
             # ✅ Update local store
@@ -358,17 +391,17 @@ class MemoryStore:
                 "scores": json.dumps(updated_idea["scores"]),
                 "feedbacks": json.dumps(updated_idea["feedbacks"]),
                 "suggestions": json.dumps(updated_idea["suggestions"]),
-                "timestamp": updated_idea["timestamp"]
+                "timestamp": updated_idea["timestamp"],
+                "document": combined_text
             }
-            
+
             metadata = self._truncate_metadata(metadata) or {}
-            if metadata is None:
-                metadata = {}
+
             # ✅ Push to Pinecone
             self.index.upsert([
                 {
                     "id": idea_id,
-                    "values": updated_idea.get("embedding", []),
+                    "values": embedding,
                     "metadata": metadata
                 }
             ])

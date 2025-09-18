@@ -70,7 +70,10 @@ const calculatescore=async(user_id, savedIdea, token)=> {
         })
         const getscoreResponse = await getscore.json();
         if(getscoreResponse.success == false) {
-            await Idea.deleteOne({ _id: savedIdea._id });
+            const idea=await Idea.findById(savedIdea._id);
+            if(idea.score=={} || idea.score==null || Object.keys(idea.score).length === 0) {
+                await Idea.deleteOne({ _id: savedIdea._id });
+            }
             return getscoreResponse.success//, getscoreResponse.response;
             // return res.status(400).json({ message: getscoreResponse.response});
         }

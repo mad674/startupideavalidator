@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
+import "./ApiKeyScreen.css";
 export default function ApiKeyForm() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
@@ -8,7 +8,7 @@ export default function ApiKeyForm() {
   const [showKey, setShowKey] = useState(false);
   const [provider, setProvider] = useState("groq"); // default provider
   const [model, setModel] = useState(""); // will be set dynamically
-
+  const [temperature, setTemperature] = useState(0.6);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/";
@@ -73,7 +73,7 @@ export default function ApiKeyForm() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ apikey: apiKey, provider_name: provider, model_name: model,provider_url:providerUrls[provider],temperature:0.6 }),
+          body: JSON.stringify({ apikey: apiKey, provider_name: provider, model_name: model,provider_url:providerUrls[provider],temperature:temperature }),
         }
       );
 
@@ -85,8 +85,8 @@ export default function ApiKeyForm() {
 
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      console.error("API key save failed:", err);
-      setError(err.message || "Something went wrong. Please try again.");
+      // console.error("API key save failed:", err);
+      alert(JSON.parse(err.message).message);
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function ApiKeyForm() {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 text-sm text-red-700 bg-red-100 p-3 rounded-lg border border-red-200">
+          <div className="mb-4 api-error ">
             {error}
           </div>
         )}
@@ -149,7 +149,19 @@ export default function ApiKeyForm() {
               ))}
             </select>
           </label>
-
+          {/* Temperature */}
+          <label className="text-sm font-medium text-gray-700">
+            Temperature
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="1"
+              defaultValue={0.6}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+            />
+          </label>
           {/* API Key Input */}
           <label className="text-sm font-medium text-gray-700">
             API Key
@@ -176,7 +188,7 @@ export default function ApiKeyForm() {
 
           {/* Provider Link */}
           <p className="text-xs text-gray-500">
-            👉 You can get your{" "}
+            👉 You can get your Free {" "}
             <span className="font-semibold capitalize">{provider}</span> key{" "}
             <a
               style={{ color: "#2563EB", textDecoration: "underline" }}

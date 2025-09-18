@@ -125,7 +125,7 @@ export default function IdeaDetail() {
           Delete Idea
         </button>
       </div>
-      <button onClick={handleDownload}>📥 Download Report</button>;
+      <button onClick={handleDownload}>📥 Download Report</button>
     </div>
   );
 }

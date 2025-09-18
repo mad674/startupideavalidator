@@ -46,7 +46,7 @@ def getscore(req: ValidateRequest):
         # "res":validate_idea(data),
         # "idea_id": idea_id,
         # "structured": data,
-        "scores": json.loads(scores),
+        "scores": scores if isinstance(scores, dict) else json.loads(scores or "{}"),
         # "suggestions": json.loads(suggestions)
     }
 

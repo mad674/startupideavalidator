@@ -18,7 +18,7 @@ def create_pdf(request: PDFRequest):
     try:
         # print("📩 Received PDF payload:", request)
         idea_data = memory.get_idea(request.user_id, request.idea_id)
-
+        # print(idea_data)
         if not idea_data:
             raise HTTPException(status_code=404, detail="Idea not found")
 
@@ -27,7 +27,7 @@ def create_pdf(request: PDFRequest):
             structured=idea_data.get('structured', {}),
             scores=idea_data.get('scores', {}),
             suggestions=idea_data.get('suggestions', {}),
-            feedback=idea_data.get('feedback', {}),  # fallback if missing
+            feedback=idea_data.get('feedbacks', {}),  # fallback if missing
             user_id=request.user_id
         )
 

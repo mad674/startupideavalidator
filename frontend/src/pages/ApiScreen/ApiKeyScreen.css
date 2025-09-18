@@ -65,6 +65,7 @@
 
 /* Error message */
 .api-error {
+  /* background-color: #dc2626; */
   color: #dc2626;
   font-size: 0.875rem;
   text-align: center;
