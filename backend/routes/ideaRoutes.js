@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const {  updateidea,submitIdea, getAllIdeas, getIdeaById, getAllUserIdeas, getsuggestions, getfeedback, deleteIdea, deleteAllUserIdeas } = require('../controllers/ideaController');
+const {  updateidea,submitIdea, getIdeaById, getAllUserIdeas, getsuggestions, getfeedback, deleteIdea, deleteAllUserIdeas } = require('../controllers/ideaController');
 
 
 router.post('/submitidea',submitIdea);
-router.get('/allideas', getAllIdeas);
 router.get('/getidea/:idea_id', getIdeaById);
 router.get('/allideas/:user_id', getAllUserIdeas);
 router.post('/getsuggestions/:idea_id',getsuggestions);

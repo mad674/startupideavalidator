@@ -335,12 +335,20 @@ const getAllUserIdeas = async (req, res, next) => {
 
 const deleteIdea = async (req, res, next) => {
     try {
+        const uidea = await Idea.findById(req.params.idea_id);
+        if (!uidea) {
+            return res.status(404).json({ message: 'Idea not found' });
+        }
+        const token = req.headers.authorization.split(" ")[1];
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        if(uidea.user_id != decodedToken.id){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
         const idea = await Idea.findByIdAndDelete(req.params.idea_id);
         // User.updateOne({ _id: idea.user_id }, { $pull: { ideas: idea._id } });
         if (!idea) {
             return res.status(404).json({ message: 'Idea not found' });
         }
-
         const deletedIdea = await fetch(`${process.env.FASTAPI_URL}/api/delete-idea`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

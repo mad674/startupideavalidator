@@ -20,12 +20,19 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import Chatbot from "./pages/Chatbot/Chatbot";
 import ApiKeyScreen from "./pages/ApiScreen/ApiKeyScreen";
 import ApiKeyForm from "./pages/ApiScreen/ApiKeyForm";
+import AdminDashboard from "./pages/AdminScreen/AdminDashboard";
+import AdminLogin from "./pages/AdminScreen/AdminLogin";
+import AdminIdeaDetail from "./pages/AdminScreen/AdminIdeaDetail";
+import useAdminAuth from "./pages/Auth/useAdminAuth";
+
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
+  const { adminSession, login: adminLogin, logout: adminLogout } = useAdminAuth();
 
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/" replace />;
   };
+  const AdminProtectedRoute = ({ children }) =>adminSession ? children : <Navigate to="/admin" replace />;
 
   return (
     <BrowserRouter>
@@ -42,6 +49,34 @@ export default function App() {
             path="/login"
             element={
               isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login onLogin={login} />
+            }
+          />
+          <Route
+            path="/admin"
+            element={<AdminLogin onLogin={adminLogin} />}
+          />
+          <Route
+            path="/admindashboard"
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboard
+                  adminId={adminSession?.adminId}
+                  token={adminSession?.token}
+                  onLogout={adminLogout}
+                />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/adminidea/:ideaId"
+            element={
+              <AdminProtectedRoute>
+                <AdminIdeaDetail
+                  adminId={adminSession?.adminId}
+                  token={adminSession?.token}
+                  onLogout={adminLogout}
+                />
+              </AdminProtectedRoute>
             }
           />
           <Route

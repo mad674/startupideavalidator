@@ -52,7 +52,7 @@ export default function Dashboard() {
           }
         );
         const data = await response.json();
-        if (response.ok) setIdeas(data);
+        if (response.ok) setIdeas(data.reverse());
       } catch {
         alert("Error fetching ideas");
       } finally {

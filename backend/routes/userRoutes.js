@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
 
 dotenv.config();
-const { getuserapikey,checkApiKey,setApiKey,register, login, getAllUsers, getUserDetails, updateUserDetails, deleteUser } = require('../controllers/userController');
+const { getuserapikey,checkApiKey,setApiKey,register, login, getUserDetails, updateUserDetails, deleteUser } = require('../controllers/userController');
 // const User = require('../models/User');
 
 const transporter = nodemailer.createTransport({
@@ -22,7 +22,7 @@ router.post("/check_api_key/:user_id", checkApiKey);
 router.post("/save_api_key/:user_id", setApiKey);
 router.post('/register', register);
 router.post('/login', login);
-router.get('/allusers', getAllUsers);
+// router.get('/allusers', getAllUsers);
 router.get('/getuserdetails/:user_id', getUserDetails);
 router.get('/getuserapikey/:user_id', getuserapikey);
 router.put('/updateuserdetails/:user_id', updateUserDetails);
