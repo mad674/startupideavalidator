@@ -3,7 +3,11 @@ node_modules/
 
 # Ignore Python cache
 __pycache__/
-
+fastapi/__pycache__/
+fastapi/agents/__pycache__/
+fastapi/memory/__pycache__/
+fastapi/routes/__pycache__/
+fastapi/utils/__pycache__/
 # Ignore compiled files
 *.class
 *.pyc
