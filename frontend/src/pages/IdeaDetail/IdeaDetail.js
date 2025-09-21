@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./IdeaDetail.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function IdeaDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [idea, setIdea] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     async function fetchIdeaData() {
@@ -21,7 +22,7 @@ export default function IdeaDetail() {
         const data = await fetchIdea.json();
         setIdea(data.idea);
       } catch (err) {
-        alert("Error fetching idea");
+        showToast("Error fetching idea");
       } finally {
         setLoading(false);
       }
@@ -38,13 +39,13 @@ export default function IdeaDetail() {
       );
       const data = await res.json();
       if (data.success) {
-        alert("Idea deleted successfully");
+        showToast("Idea deleted successfully",data.success);
         navigate("/dashboard");
       } else {
-        alert("Failed to delete idea");
+        showToast("Failed to delete idea");
       }
     } catch (err) {
-      alert("Error deleting idea");
+      showToast("Error deleting idea");
     }
   }
 
@@ -62,7 +63,7 @@ export default function IdeaDetail() {
     });
     
     if (!response.ok) {
-      alert("Failed to generate PDF");return;
+      showToast("Failed to generate PDF");return;
     }
     // Convert to blob
     const blob = await response.blob();

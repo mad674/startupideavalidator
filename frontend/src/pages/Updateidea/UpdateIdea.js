@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./UpdateIdea.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function UpdateIdea() {
   const { id } = useParams();
   const navigate = useNavigate();
   const decodedId = atob(id);
-
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     problem_statement: "",
@@ -36,11 +36,11 @@ export default function UpdateIdea() {
             business_model: data.idea.data.business_model || "",
           });
         } else {
-          alert("Idea not found");
+          showToast("Idea not found");
           navigate("/dashboard");
         }
       } catch (error) {
-        alert("Error fetching idea details");
+        showToast("Error fetching idea details");
       } finally {
         setLoading(false);
       }
@@ -72,13 +72,13 @@ export default function UpdateIdea() {
 
       const result = await res.json();
       if (result.success) {
-        alert(result.message || "Idea updated successfully");
+        showToast(result.message || "Idea updated successfully",result.success);
         navigate(`/ideas/${id}`);
       } else {
-        alert(result.message || "Failed to update idea");
+        showToast(result.message || "Failed to update idea");
       }
     } catch (error) {
-      alert("Error updating idea");
+      showToast("Error updating idea");
     }
   };
 

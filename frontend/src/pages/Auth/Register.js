@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Register.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function Register({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-
+  const {showToast} = useToast();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -20,15 +20,15 @@ export default function Register({ onLogin }) {
 
       const data = await res.json();
       if (data.success) {
-        alert(data.message || "Registration successful");
+        showToast(data.message || "Registration successful",data.success);
         onLogin(data.token);
         navigate("/dashboard");
       } else {
-        alert(data.message || "Registration failed");
+        showToast(data.message || "Registration failed",data.success);
       }
     } catch (err) {
       console.error("Registration error:", err);
-      alert("Something went wrong");
+      showToast("Something went wrong",false);
     } finally {
       setLoading(false);
     }

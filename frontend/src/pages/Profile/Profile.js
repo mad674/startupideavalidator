@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import "./Profile.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  const {showToast}=useToast();
   // Fetch user data immediately without useEffect
   if (loading) {
     const token = localStorage.getItem("token");
@@ -27,7 +27,7 @@ export default function Profile() {
           setLoading(false);
         })
         .catch(() => {
-          alert("Error fetching user details");
+          showToast("Error fetching user details");
           navigate("/dashboard");
         });
     }

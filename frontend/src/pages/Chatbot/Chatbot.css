@@ -136,3 +136,38 @@
   }
 }
 
+
+/* Chat bubble wrapper if needed */
+.chat-bubble {
+  max-width: 75%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Copy button styling */
+.copy-icon-btn {
+  width: 22px;
+  height: 20px;
+  background-color: none;
+  border-radius: 3px;
+  border: none;
+  margin-left: 4px;
+  cursor: pointer;
+  position: relative;
+  font-size: 10px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* transition: background-color 0.15s, opacity 0.2s; */
+}
+
+/* Hover effect */
+/* .copy-icon-btn:hover {
+  background-color: #aaa;
+} */
+
+

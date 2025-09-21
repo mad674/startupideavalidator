@@ -19,6 +19,19 @@ Also calculate:
 - Average Score
 - Overall Viability: "Low" if average ≤ 2.4, "Moderate" if 2.5–3.4, "High" if ≥ 3.5.
 
+IN JSON FORMAT OUTPUT SHOULD BE NOT in string format.
+example:
+{{
+    "Technical Feasibility": 3.1,
+    "Market Size": 4,
+    "Revenue Model": 4.2,
+    "Uniqueness": 4,
+    "Team Strength": 4,
+    "Average Score": 4.5,
+    "Overall Viability": "High"
+}}
+
+GIVE ME ONLY THIS TYPE OF OUTPUT NOT ANY STRING TEXT.
 Be realistic and conservative with scores. Do not inflate ratings.
 don't explain your reasoning, just return the JSON structure. no other text needed. 
 Startup Idea:

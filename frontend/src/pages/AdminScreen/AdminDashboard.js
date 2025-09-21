@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useToast } from "../../components/Popups/Popup";
 const AdminUsersPage = ({ onLogout,adminId, token }) => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -9,7 +9,7 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
   const [userIdeas, setUserIdeas] = useState([]);
   const [ideaSearch, setIdeaSearch] = useState(""); // Search for ideas
   const navigate = useNavigate();
-
+  const {showToast}=useToast();
   useEffect(() => {
     fetchAllUsers();
   }, []);
@@ -66,8 +66,8 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
         body: JSON.stringify({ user_id: user._id }),
       });
       const data=await res.json();
-      if(!data.success) return alert(data.message);
-      alert("User deleted successfully");
+      if(!data.success) return showToast(data.message);
+      showToast("User deleted successfully");
       goBack();
       fetchAllUsers();
     } catch (err) {
@@ -95,7 +95,7 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
         method: "DELETE",
         headers: { Authorization: token },
       });
-      alert("All ideas deleted successfully");
+      showToast("All ideas deleted successfully",true);
       if (selectedUser) fetchUserIdeas(selectedUser);
     } catch (err) {
       console.error(err);
@@ -110,8 +110,8 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
         body: JSON.stringify({ user_id: selectedUser._id }),
       });
       const data = await res.json();
-      if (!data.success) return alert(data.message);
-      alert("All ideas deleted successfully");
+      if (!data.success) return showToast(data.message);
+      showToast("All ideas deleted successfully",true);
       if (selectedUser) fetchUserIdeas(selectedUser);
     } catch (err) {
       console.error(err);

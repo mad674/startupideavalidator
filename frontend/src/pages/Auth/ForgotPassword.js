@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ForgotPassword.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const {showToast} = useToast();
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -19,14 +19,14 @@ export default function ForgotPassword() {
       const data = await res.json();
       // console.log(data);
       if (data.success) {
-        alert(data.message);
+        showToast(data.message,data.success);
         navigate(`/reset-password/${btoa(data.userId)}`); // navigate to reset page with userId
       } else {
-        alert(data.message || "Failed to send OTP");
+        showToast(data.message || "Failed to send OTP",data.success);
       }
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      showToast("Server error",false);
     } finally {
       setLoading(false);
     }

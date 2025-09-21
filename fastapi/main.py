@@ -6,7 +6,7 @@ from routes import validate,pdf,feedback,suggestion,scores,deleteidea,chatbot
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI(title="Startup Idea Validator API")
+app = FastAPI(title="Startup Idea Validator API")#,docs_url=None,redoc_url=None )# use them for remove api testing 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # or your frontend URL
@@ -25,6 +25,11 @@ app.include_router(chatbot.router, prefix="/api")
 @app.get("/")
 def root():
     return {"message": "Startup Validator Backend is running 🚀"}
+
+@app.head("/health")
+def health():
+    return {"status": "ok"}
+
 
 if __name__ == "__main__":
     import uvicorn

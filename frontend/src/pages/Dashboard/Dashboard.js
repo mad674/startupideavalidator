@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
-
+import { useToast } from "../../components/Popups/Popup";
 function isTokenExpired(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -15,12 +15,13 @@ export default function Dashboard() {
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const {showToast}=useToast();
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
   if (!token || isTokenExpired(token)) {
     if (!sessionStorage.getItem("sessionExpired")) {
-      alert("Your session has expired. Please log in again.");
+      showToast("Your session has expired. Please log in again.");
       sessionStorage.setItem("sessionExpired", "true");
     }
     localStorage.removeItem("token");
@@ -36,7 +37,7 @@ export default function Dashboard() {
         uid = JSON.parse(atob(token.split(".")[1])).id;
         setUserId(uid);
       } catch {
-        alert("Invalid token");
+        showToast("Invalid token");
         setLoading(false);
         return;
       }
@@ -54,7 +55,7 @@ export default function Dashboard() {
         const data = await response.json();
         if (response.ok) setIdeas(data.reverse());
       } catch {
-        alert("Error fetching ideas");
+        showToast("Error fetching ideas");
       } finally {
         setLoading(false);
       }

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./ResetPassword.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function ResetPassword() {
   const { userId } = useParams(); // from route /reset-password/:userId
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const {showToast} = useToast();
   const handleReset = async (e) => {
     e.preventDefault();
-    if (otp.length !== 4) return alert("OTP must be 4 digits");
+    if (otp.length !== 4) return showToast("OTP must be 4 digits",false);
 
     setLoading(true);
     try {
@@ -24,14 +24,14 @@ export default function ResetPassword() {
       const data = await res.json();
       // console.log(data);
       if (data.success) {
-        alert(data.message || "Password reset successfully");
+        showToast(data.message || "Password reset successfully",data.success);
         navigate("/login");
       } else {
-        alert(data.message || "Failed to reset password");
+        showToast(data.message || "Failed to reset password",data.false);
       }
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      showToast("Server error",data.false);
     } finally {
       setLoading(false);
     }

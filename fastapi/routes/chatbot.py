@@ -8,12 +8,16 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+from langchain.schema import HumanMessage
+# from routes.pdf import PDFRequest, create_pdf
 from langchain.memory import ConversationBufferMemory, ChatMessageHistory
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os, json, asyncio, httpx, traceback
 from utils.encrypt import decrypt_api_key
 from langchain_openai import ChatOpenAI
+import requests 
+
 load_dotenv()
 
 router = APIRouter()
@@ -70,7 +74,18 @@ def _impl_retrieve_idea(user_id: str, idea_id: str) -> str:
     """Return the full idea as JSON string."""
     try:
         idea = memory.get_idea(user_id, idea_id)
-        return json.dumps(idea or {}, indent=2, ensure_ascii=False)
+        if not idea:
+            return "{}"
+
+        # Pick only the required keys safely
+        keys = ["structured", "scores", "suggestions", "feedbacks", "chat_history", "timestamp"]
+        filtered_idea = {k: idea.get(k) for k in keys}
+
+        # Keep only last 5 chat messages
+        if "chat_history" in filtered_idea and filtered_idea["chat_history"]:
+            filtered_idea["chat_history"] = filtered_idea["chat_history"][-5:]
+
+        return json.dumps(filtered_idea, indent=2, ensure_ascii=False)
     except Exception as e:
         return f"Error retrieving idea: {e}"
 
@@ -109,35 +124,32 @@ def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_tok
             try:
                 with httpx.Client(timeout=30) as client:
                     resp = client.put(url, json={"data": updated_fields}, headers=headers)
-                    if resp.ok:
+                    if resp.status_code == 200:
                         return f"✅ Updated both locally and backend. Fields: {json.dumps(updated_fields)}"
                     else:
                         return f"⚠️ Updated locally, backend failed: {resp.message}"
             except Exception as e:
-                return f"⚠️ Updated locally, backend error: {e}"
+                # return f"⚠️ Updated locally, backend error: {e}"
+                return f"✅ Updated locally. Fields: {json.dumps(updated_fields)}"
         return f"✅ Updated locally. Fields: {json.dumps(updated_fields)}"
     except Exception as e:
         return f"Error updating idea: {e}"
 
-# ---------------- PDF TOOL ----------------
-def _impl_generate_pdf(user_id: str, idea_id: str) -> str:
-    """Call backend to generate PDF and return download link."""
-    try:
-        backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
-        url = f"{backend_url}/api/pdf"
-        payload = {"user_id": user_id, "idea_id": idea_id}
-
-        with httpx.Client(timeout=60) as client:
-            resp = client.post(url, json=payload)
-
-        if resp.status_code == 200:
-            filename = f"{user_id}_startup_report.pdf"
-            # Assuming backend stores report under /static/reports/
-            return f"📄 Your startup evaluation report is ready: {backend_url}/static/reports/{filename}"
-        else:
-            return f"❌ Failed to generate PDF: {resp.text}"
-    except Exception as e:
-        return f"⚠️ Error generating PDF: {str(e)}"
+def _impl_gather_info(query: str) -> str:
+    url = "https://serpapi.com/search.json"
+    params = {
+        "q": query,
+        "api_key": os.getenv("SERP_API_KEY"),
+        "num": 3,  # top 3 results
+    }
+    response = requests.get(url, params=params).json()
+    answers = []
+    for result in response.get("organic_results", []):
+        snippet = result.get("snippet")
+        link = result.get("link")
+        if snippet:
+            answers.append(f"{snippet} (Source: {link})")
+    return "\n\n".join(answers) if answers else "No relevant info found."
 
 # -----------------------------
 # Tools factory
@@ -152,33 +164,56 @@ class UpdateIdeaInput(BaseModel):
     target_market: Optional[str] = None
     team: Optional[str] = None
     business_model: Optional[str] = None
+class GatherInfoInput(BaseModel):
+    query: Optional[str]=None
 
-def build_tools_with_context(user_id: str, idea_id: str, auth_token: str):
+def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
     def retrieve_idea_tool(_: str = "") -> str:
         return _impl_retrieve_idea(user_id, idea_id)
     def summarize_history_tool(_: str = "") -> str:
         return _impl_summarize_history(user_id, idea_id)
     def update_idea_tool(input: UpdateIdeaInput) -> str:
-        # Only include fields that are not None
-        updated_fields = {k: v for k, v in input.dict().items() if v is not None}
-        return _impl_update_idea(user_id, idea_id, updated_fields, auth_token)
+        """
+        Update idea fields. Assumes `input` is always a Pydantic model.
+        """
+        try:
+            # Only include fields that are not None
+            updated_fields = {k: v for k, v in input.dict().items() if v is not None}
 
-    def generate_pdf_tool(_: str = "") -> str:
-        return _impl_generate_pdf(user_id, idea_id)
+            if not updated_fields:
+                return "No valid fields to update."
+
+            # Call your implementation to update the idea
+            return _impl_update_idea(user_id, idea_id, updated_fields, auth_token)
+
+        except Exception as e:
+            return f"Error updating idea: {e}"
+
+    def gather_info(input:GatherInfoInput) -> str:
+        raw_results = _impl_gather_info(input.query)
+        if not raw_results:
+            return "No relevant info found."
+
+        prompt = f"Summarize this information clearly for the user:\n{raw_results}"
+
+        # Use invoke with a list of messages
+        summary = llm.invoke([HumanMessage(content=prompt)])
+        return summary.content
     return [
         Tool(name="retrieve_idea", description="Get the current startup idea.", func=retrieve_idea_tool),
         Tool(name="summarize_history", description="Summarize recent chat history.", func=summarize_history_tool),
         Tool(
             name="update_idea",
-            description="Update idea fields after user confirmation.",
+            description="Update idea fields after user confirmation. input should be a Pydantic model.",
             func=update_idea_tool,
             args_schema=UpdateIdeaInput
         ),
         Tool(
-            name="generate_pdf",
-            func=generate_pdf_tool,
-            description="Generate a full startup evaluation report PDF for the user."
-        ),
+            name="gather_info",
+            description="Gather relevant information from the web.",
+            func=gather_info,
+            args_schema=GatherInfoInput
+        )
     ]
 
 # -----------------------------
@@ -256,7 +291,7 @@ Be reliable, structured, and human-like in coaching while maintaining software-f
 def build_agent_executor(llm,user_id: str, idea_id: str, auth_token: str) -> AgentExecutor:
     """Builds and returns an AgentExecutor for the user/idea context."""
     try:
-        tools = build_tools_with_context(user_id, idea_id, auth_token)
+        tools = build_tools_with_context(llm,user_id, idea_id, auth_token)
         idea_structured = fetch_idea_from_db(user_id, idea_id)
         idea_context = format_idea_context({"structured": idea_structured})
 

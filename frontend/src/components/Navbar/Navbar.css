@@ -1,59 +1,46 @@
-:root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --bg-dark: #1f2937;
-  --text-light: #f1f5f9;
-  --text-light-hover: #e2e8f0;
-}
-
+/* Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 10%;
-  background: var(--bg-dark);
-  color: var(--text-light);
-  font-family: "Inter", sans-serif;
-  flex-wrap: wrap;
-  position: relative;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
-.navbar-brand a {
-  font-size: 1.2rem;
+.navbar-brand {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: white;
   text-decoration: none;
 }
 
-.navbar-links {
+.navbar-left {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 1rem;
 }
 
-.navbar-links a {
-  color: var(--text-light);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.navbar-links a:hover,
-.navbar-links a.active {
-  color: var(--primary);
+.hamburger-btn {
+  display: none;
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 
 /* Profile */
-.navbar-profile {
-  position: relative;
-}
-
 .profile-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
 }
 
@@ -61,56 +48,125 @@
   transform: scale(1.05);
 }
 
-/* Dropdown */
 .profile-dropdown {
   position: absolute;
-  right: 0;
-  top: 50px;
+  top: 60px;
+  right: 1.5rem;
   background: white;
-  color: var(--text-dark);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  color: #1e293b;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
   display: flex;
   flex-direction: column;
-  min-width: 150px;
-  z-index: 1000;
   overflow: hidden;
+  min-width: 150px;
 }
 
 .profile-dropdown a,
 .profile-dropdown button {
-  padding: 10px 15px;
+  padding: 0.5rem 1rem;
   text-align: left;
   border: none;
   background: none;
   cursor: pointer;
-  width: 100%;
-  font-size: 0.95rem;
-  text-decoration: none;
-  color: var(--text-dark);
+  color: inherit;
   transition: background 0.2s;
 }
 
 .profile-dropdown a:hover,
 .profile-dropdown button:hover {
-  background: var(--bg-dark);
-  color: white;
+  background: #e2e8f0;
 }
 
-/* Responsive for mobile */
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 250px;
+  height: 100%;
+  background: #1e293b;
+  color: white;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: left 0.3s ease;
+  z-index: 110;
+}
+
+.sidebar.open {
+  left: 0;
+}
+
+.close-sidebar {
+  align-self: flex-end;
+  background: transparent;
+  border: none;
+  font-size: 1.75rem;
+  color: white;
+  cursor: pointer;
+}
+
+.sidebar-links a,
+.sidebar-logout {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+}
+
+.sidebar-links a.active,
+.sidebar-links a:hover,
+.sidebar-logout:hover {
+  background: #2563eb;
+}
+
+.sidebar-logout {
+  background: #dc2626;
+  border: none;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+}
+
+/* Desktop Links hidden in mobile */
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar-links a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+}
+
+.navbar-links a.active,
+.navbar-links a:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
   .navbar-links {
-    flex-direction: column;
-    width: 100%;
+    display: none;
   }
-
-  .navbar-links a {
-    padding: 5px 0;
+  .hamburger-btn {
+    display: block;
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './CreateIdea.css';
 import { useNavigate, Navigate } from 'react-router-dom';
-
+import { useToast } from '../../components/Popups/Popup';
 export default function CreateIdea() {
   const [form, setForm] = useState({
     name: '',
@@ -11,6 +11,7 @@ export default function CreateIdea() {
     business_model: '',
     team: ''
   });
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   // const [error, setEr/ror] = useState(null);
   const navigate = useNavigate();
@@ -42,14 +43,14 @@ export default function CreateIdea() {
       })
       const res = await submitidea.json();
       if(res.success){
-        alert(res.message || 'Idea submitted successfully');
+        showToast(res.message || 'Idea submitted successfully',res.success);
         navigate(`/ideas/${btoa(res.idea_id)}`);
       }else{
-        alert(res.message|| 'Idea submission failed');
+        showToast(res.message|| 'Idea submission failed');
       }
       
     } catch (err) {
-      alert(err.message || 'Something went wrong');
+      showToast(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }

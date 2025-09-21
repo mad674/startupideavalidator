@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import { useToast } from "../../components/Popups/Popup";
 const AdminIdeaDetail = ({ onLogout,adminId, token }) => {
   const { ideaId } = useParams();
   const [idea, setIdea] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const {showToast}=useToast();
   useEffect(() => {
     fetchIdeaDetail();
     // eslint-disable-next-line
@@ -50,9 +50,9 @@ const AdminIdeaDetail = ({ onLogout,adminId, token }) => {
       );
       const data = await res.json();
       if (!data.success){
-        return alert(data.message);
+        return showToast(data.message);
       }
-      alert("Idea deleted successfully");
+      showToast("Idea deleted successfully",true);
       navigate('/admindashboard'); // go back after delete
     } catch (err) {
       console.error(err);

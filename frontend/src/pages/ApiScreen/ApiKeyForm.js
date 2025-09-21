@@ -1,13 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./ApiKeyScreen.css";
+
+// Provider logos (replace with your actual logos in /assets)
+import groqLogo from "../../assets/groq.png";
+import openaiLogo from "../../assets/openai.png";
+import togetherLogo from "../../assets/together.png";
+import fireworksLogo from "../../assets/fireworks.png";
+import mistralLogo from "../../assets/mistral.png";
+
 export default function ApiKeyForm() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState("groq"); // default provider
-  const [model, setModel] = useState(""); // will be set dynamically
+  const [provider, setProvider] = useState("groq");
+  const [model, setModel] = useState("");
   const [temperature, setTemperature] = useState(0.6);
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,16 +24,14 @@ export default function ApiKeyForm() {
   const token = localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
 
-  // Available models by provider
   const providerModels = {
-    groq: ["llama-3.1-8b-instant","llama-3.1-70b-versatile", "llama-3.3-70b-versatile","openai/gpt-oss-20b","openai/gpt-oss-120b","llama3-groq-70b-8192-tool-use-preview"],
-    openai: ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
-    together: ["togethercomputer/llama-2-70b-chat", "togethercomputer/mixtral-8x7b-instruct"],
-    fireworks: ["accounts/fireworks/models/llama-v2-70b-chat", "accounts/fireworks/models/mixtral-8x7b-instruct"],
-    mistral: ["mistral-large", "mistral-medium", "mistral-small"],
+    groq: ["llama-3.1-8b-instant","llama-3.1-70b-versatile","llama-3.3-70b-versatile","openai/gpt-oss-20b","openai/gpt-oss-120b","llama3-groq-70b-8192-tool-use-preview"],
+    openai: ["gpt-4o-mini","o4-mini","gpt-4o","gpt-3.5-turbo","gpt-oss-20b"],
+    together: ["togethercomputer/llama-2-70b-chat","togethercomputer/mixtral-8x7b-instruct","togethercomputer/llama-3.2-11b-free"],
+    fireworks: ["accounts/fireworks/models/llama-v2-70b-chat","accounts/fireworks/models/mixtral-8x7b-instruct"],
+    mistral: ["mistral-large","mistral-medium","mistral-small"],
   };
 
-  // Provider Docs Links
   const providerLinks = {
     groq: "https://console.groq.com/keys",
     openai: "https://platform.openai.com/account/api-keys",
@@ -33,6 +39,15 @@ export default function ApiKeyForm() {
     fireworks: "https://fireworks.ai/account/api-keys",
     mistral: "https://console.mistral.ai/api-keys",
   };
+
+  const providerLogos = {
+    groq: groqLogo,
+    openai: openaiLogo,
+    together: togetherLogo,
+    fireworks: fireworksLogo,
+    mistral: mistralLogo,
+  };
+
   const providerUrls = {
     groq: "https://api.groq.com/openai/v1",
     openai: "https://api.openai.com/v1",
@@ -41,7 +56,6 @@ export default function ApiKeyForm() {
     mistral: "https://api.mistral.ai/v1",
   };
 
-  // Auto-select default model (prefer llama if present)
   useEffect(() => {
     const models = providerModels[provider] || [];
     const llamaModel = models.find((m) => m.toLowerCase().includes("llama"));
@@ -52,40 +66,32 @@ export default function ApiKeyForm() {
     e.preventDefault();
     setError(null);
 
-    if (!apiKey.trim()) {
-      setError("API key is required");
-      return;
-    }
-
-    if (!userId || !token) {
-      setError("Not authenticated. Please log in again.");
-      return;
-    }
+    if (!apiKey.trim()) return setError("API key is required");
+    if (!userId || !token) return setError("Not authenticated. Please log in again.");
 
     setLoading(true);
-
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BACKEND}/user/save_api_key/${userId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ apikey: apiKey, provider_name: provider, model_name: model,provider_url:providerUrls[provider],temperature:temperature }),
-        }
-      );
+      const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/save_api_key/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          apikey: apiKey,
+          provider_name: provider,
+          model_name: model,
+          provider_url: providerUrls[provider],
+          temperature: temperature,
+        }),
+      });
 
       if (!res.ok) {
         const errMsg = await res.text();
-        // alert(errMsg);
         throw new Error(errMsg || "Failed to save API key");
       }
-
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      // console.error("API key save failed:", err);
       alert(JSON.parse(err.message).message);
     } finally {
       setLoading(false);
@@ -93,126 +99,89 @@ export default function ApiKeyForm() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md border border-gray-100">
-        {/* Title */}
-        <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-          🔑 Connect Your API Key
-        </h1>
-
-        {/* Info */}
-        <p className="text-sm text-gray-600 mb-4">
-          Select a provider, choose a model, and paste your API key below. We
-          never share your keys — they are securely stored for your account only.
+    <div className="api-page">
+      <div className="api-card">
+        <h1 className="api-title">🔑 Connect Your API Key</h1>
+        <p className="api-desc">
+          Select a provider, choose a model, and paste your API key below. Your keys are securely stored and never shared.
         </p>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-4 api-error ">
-            {error}
-          </div>
-        )}
+        {error && <div className="api-error">{error}</div>}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Provider Select */}
-          <label className="text-sm font-medium text-gray-700">
+        <form onSubmit={handleSubmit} className="api-form">
+          {/* Provider */}
+          <label className="api-label">
             Provider
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            >
-              <option value="groq">Groq</option>
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="together">Together AI</option>
-              <option value="fireworks">Fireworks AI</option>
-              <option value="mistral">Mistral</option>
-            </select>
+            <div className="provider-select-wrapper">
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                className="api-select"
+              >
+                {Object.keys(providerModels).map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              <img src={providerLogos[provider]} alt={provider} className="provider-logo" />
+            </div>
           </label>
 
-          {/* Model Select */}
-          <label className="text-sm font-medium text-gray-700">
+          {/* Model */}
+          <label className="api-label">
             Model
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="api-select"
             >
               {providerModels[provider].map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
           </label>
+
           {/* Temperature */}
-          <label className="text-sm font-medium text-gray-700">
+          <label className="api-label">
             Temperature
             <input
               type="number"
               step="0.1"
               min="0"
               max="1"
-              defaultValue={0.6}
+              value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+              className="api-input"
             />
           </label>
-          {/* API Key Input */}
-          <label className="text-sm font-medium text-gray-700">
+
+          {/* API Key */}
+          <label className="api-label">
             API Key
-            <div className="relative mt-2">
+            <div className="input-wrapper">
               <input
                 type={showKey ? "text" : "password"}
                 placeholder="sk-..."
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 font-mono text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:opacity-50"
+                className="api-input"
                 disabled={loading}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700 text-xs"
-              >
+              <button type="button" onClick={() => setShowKey(!showKey)} className="show-btn">
                 {showKey ? "Hide" : "Show"}
               </button>
             </div>
           </label>
 
-          {/* Provider Link */}
-          <p className="text-xs text-gray-500">
-            👉 You can get your Free {" "}
-            <span className="font-semibold capitalize">{provider}</span> key{" "}
-            <a
-              style={{ color: "#2563EB", textDecoration: "underline" }}
-              href={providerLinks[provider]}
-              target="_blank"
-              rel="noreferrer"
-              className="text-blue-600 hover:underline"
-            >
+          <p className="api-info">
+            👉 Get your <span className="font-semibold">{provider}</span> key{" "}
+            <a href={providerLinks[provider]} target="_blank" rel="noreferrer" className="api-link">
               here
-            </a>
-            .
+            </a>.
           </p>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2.5 rounded-lg text-white font-medium shadow-md transition-all duration-200 ${
-              loading
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
-            }`}
-          >
-            {loading ? "Saving..." : "verify & Save"}
+          <button type="submit" disabled={loading} className="api-submit">
+            {loading ? "Saving..." : "Verify & Save"}
           </button>
         </form>
       </div>

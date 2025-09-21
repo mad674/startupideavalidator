@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 # from agents.clarifier import clarify_idea
 from agents.scorer import score_idea
@@ -15,38 +16,43 @@ class ValidateRequest(BaseModel):
     data:dict
     api:dict
 
+
+
 @router.post("/getscore")
 def getscore(req: ValidateRequest):
-    # data={
-    #     "name": request.name if request.name else "No Idea Provided",
-    #     "problem_statement": request.problem_statement if request.problem_statement else "No Problem Statement Provided",
-    #     "solution": request.solution if request.solution else "No Solution Provided",
-    #     "target_market": request.target_market if request.target_market else "No Target Market Provided",
-    #     "business_model": request.business_model if request.business_model else "No Business Model Provided",
-    #     "team": request.team   if request.team else "No Team Provided",
-    # }
-    scores = score_idea(req.api,req.data)
-    # suggestions = suggest_improvements(data, scores)
-    res=memory.store_idea(
-        req.user_id,
-        req.idea_id,
-        req.data,
-        req.data["name"],
-        scores,
-        # suggestions
-    )
-    if(res==False):
-        return {
-            "success": False,
-            "response": "Error in storing idea , idea already exists!"
-        }
-    return {
-        "success": True,
-        # "response": "✅ That looks like a startup idea!",
-        # "res":validate_idea(data),
-        # "idea_id": idea_id,
-        # "structured": data,
-        "scores": scores if isinstance(scores, dict) else json.loads(scores or "{}"),
-        # "suggestions": json.loads(suggestions)
-    }
+    try:
+        # Compute score
+        scores = score_idea(req.api, req.data)
+        # Store in memory (returns False if duplicate)
+        res = memory.store_idea(
+            req.user_id,
+            req.idea_id,
+            req.data,
+            req.data["name"],
+            scores,
+        )
+
+        if not res:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "response": "Error in storing idea, idea already exists!"
+                }
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "scores": json.loads(scores)
+            }
+        )
+
+    except Exception as e:
+        # Catch **all exceptions** and return JSON
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
 

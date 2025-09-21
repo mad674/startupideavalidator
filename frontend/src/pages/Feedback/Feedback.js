@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./Feedback.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function Feedback() {
   const { id } = useParams();
   const decodedId = atob(id);
   const navigate = useNavigate();
-
+  const { showToast } = useToast();
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -23,7 +23,7 @@ export default function Feedback() {
       const data = await res.json();
 
       if (!data) {
-        alert("Failed to fetch idea");
+        showToast("Failed to fetch idea");
         navigate("/dashboard");
         return;
       }
@@ -54,7 +54,7 @@ export default function Feedback() {
       if (result?.success && result?.feedback) {
         setFeedback(result.feedback);
       } else {
-        alert(result?.error || "Failed to generate feedback");
+        showToast(result?.error || "Failed to generate feedback");
       }
     } catch (err) {
       console.error("Error generating feedback:", err);

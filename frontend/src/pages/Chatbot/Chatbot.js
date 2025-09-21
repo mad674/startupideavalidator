@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import CopyButton from "./CopyButton";
 import "./Chatbot.css";
 
 export default function Chatbot() {
@@ -56,7 +57,7 @@ export default function Chatbot() {
   useEffect(() => {
     if (!apiKey) return;
 
-    ws.current = new WebSocket(`ws://localhost:8000/api/ws/chat`);
+    ws.current = new WebSocket(`ws://${process.env.REACT_APP_CHATBOT}/api/ws/chat`);
 
     ws.current.onopen = () => {
       ws.current.send(
@@ -131,7 +132,8 @@ export default function Chatbot() {
       <div className="chat-messages">
         {messages.map((msg) => (
           <div key={msg.id} className={`chat-message ${msg.sender}`}>
-            <div className="message-text">{msg.text}</div>
+            <p className="message-text text-sm ">{msg.text}</p>
+            <CopyButton text={msg.text} />
           </div>
         ))}
         <div ref={messagesEndRef} />

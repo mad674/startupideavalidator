@@ -17,6 +17,12 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ message: 'Running on port 5000'});
+})
+app.head('/health', (req, res) => {
+    res.status(200).json({ message: 'Running on port 5000'});
+})
 // API Routes
 app.use('/idea', ideaRoutes); // Idea routes are prefixed with '/idea'
 app.use('/user', userRoutes); // User routes are prefixed with '/user'

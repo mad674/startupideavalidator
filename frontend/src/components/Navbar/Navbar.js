@@ -5,44 +5,66 @@ import "./Navbar.css";
 export default function Navbar({ onLogout }) {
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const menuLinks = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Profile", path: "/profile" },
+    { name: "Settings", path: "/settings" },
+  ];
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/dashboard">🚀 AI Startup Validator</Link>
-      </div>
+    <>
+      {/* Top Navbar */}
+      <nav className="navbar">
+        <div className="navbar-left">
+          <Link to="/dashboard" className="navbar-brand">
+            🚀 AI Startup Validator
+          </Link>
+        </div>
 
-      <div className="navbar-links">
-        <Link
-          to="/dashboard"
-          className={location.pathname === "/dashboard" ? "active" : ""}
-        >
-          Dashboard
-        </Link>
-        {/* <Link
-          to="/settings"
-          className={location.pathname === "/settings" ? "active" : ""}
-        >
-          Settings
-        </Link> */}
-      </div>
+        <div className="navbar-right">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+            alt="Profile"
+            className="profile-avatar"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          />
+          {dropdownOpen && (
+            <div className="profile-dropdown">
+              <Link to="/profile" onClick={() => setDropdownOpen(false)}>
+                Profile
+              </Link>
+              <Link to="/settings" onClick={() => setDropdownOpen(false)}>
+                Settings
+              </Link>
+              <button onClick={onLogout}>Logout</button>
+            </div>
+          )}
+        </div>
+      </nav>
 
-      <div className="navbar-profile">
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
-          alt="Profile"
-          className="profile-avatar"
-          style={{backgroundColor: "white"}}
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-        />
-        {dropdownOpen && (
-          <div className="profile-dropdown">
-            <Link to="/profile" onClick={() => setDropdownOpen(false)}>Profile</Link>
-            <Link to="/settings" onClick={() => setDropdownOpen(false)}>Settings</Link>
-            <button onClick={onLogout}>Logout</button>
-          </div>
-        )}
+      {/* Sidebar */}
+      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        <button className="close-sidebar" onClick={() => setSidebarOpen(false)}>
+          ×
+        </button>
+        <div className="sidebar-links">
+          {menuLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={location.pathname === link.path ? "active" : ""}
+              onClick={() => setSidebarOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+          <button className="sidebar-logout" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
       </div>
-    </nav>
+    </>
   );
 }

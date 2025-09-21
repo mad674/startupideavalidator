@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
-
+import { useToast } from "../../components/Popups/Popup";
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
-
+  const { showToast } = useToast();
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/login`, {
         method: "POST",
@@ -19,15 +18,15 @@ export default function Login({ onLogin }) {
       const data = await res.json();
 
       if (data.success) {
-        alert(data.message || "Login successful!");
+        showToast("🎉 Login successful! ",data.success);
         onLogin(data.token);
         navigate("/dashboard");
       } else {
-        alert(data.message || "Login failed.");
+        showToast(data.message || "Login failed.");
       }
     } catch (error) {
       console.error("Error logging in:", error);
-      alert("An error occurred while logging in.");
+      showToast("An error occurred while logging in.");
     }
   };
 

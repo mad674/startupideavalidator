@@ -1,13 +1,14 @@
 import React, { useEffect, useState, } from 'react';
 import { Navigate, redirect, useParams, useNavigate } from 'react-router-dom';
 import './Suggestions.css';
-
+import { useToast } from "../../components/Popups/Popup";
 export default function Suggestions() {
   const { id } = useParams(); // ID from URL (Base64 decode if needed)
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-const navigate = useNavigate();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
   const decodedId = atob(id);
   // 🔹 Fetch existing suggestions on load
   useEffect(() => {
@@ -25,7 +26,7 @@ const navigate = useNavigate();
     );
       const data = await res.json();
       if (!res.ok) {
-          alert('Failed to fetch idea');
+          showToast('Failed to fetch idea');
           navigate('/dashboard');
       }   
         const existing = data.suggestions || null;
