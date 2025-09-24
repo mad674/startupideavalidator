@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.git
+.env
+agents/__pycache__/
+memory/__pycache__/
+routes/__pycache__/
+utils/__pycache__/
+

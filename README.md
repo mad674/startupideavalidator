@@ -1,4 +1,4 @@
-##🚀 Startup Validator – Full Stack Project
+##🚀 AI Startup Idea Validator – Full Stack Project
 ---
 ## 📌 Overview
 

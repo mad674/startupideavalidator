@@ -24,7 +24,7 @@ app.include_router(chatbot.router, prefix="/api")
 
 @app.get("/")
 def root():
-    return {"message": "Startup Validator Backend is running 🚀"}
+    return {"message": "Startup Validator Agent is running 🚀"}
 
 @app.head("/health")
 def health():

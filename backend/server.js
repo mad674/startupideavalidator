@@ -17,11 +17,14 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+app.get('/', (req, res) => {
+    res.send('SIV BACKEND API is running...');
+})
 app.get('/health', (req, res) => {
-    res.status(200).json({ message: 'Running on port 5000'});
+    res.status(200).json({ message: 'Running SIVBACKEND successfully'});
 })
 app.head('/health', (req, res) => {
-    res.status(200).json({ message: 'Running on port 5000'});
+    res.status(200).json({ message: 'Running SIVBACKEND successfully'});
 })
 // API Routes
 app.use('/idea', ideaRoutes); // Idea routes are prefixed with '/idea'
@@ -34,6 +37,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT,"0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
 });
