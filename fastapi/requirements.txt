@@ -9,7 +9,7 @@ pydantic
 fpdf
 httpx
 pinecone
-# -client
 crypto
 pycryptodome
 python-dotenv
+langchain-community

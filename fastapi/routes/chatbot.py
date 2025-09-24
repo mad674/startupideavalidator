@@ -10,7 +10,8 @@ from langchain.prompts.chat import (
 )
 from langchain.schema import HumanMessage
 # from routes.pdf import PDFRequest, create_pdf
-from langchain.memory import ConversationBufferMemory, ChatMessageHistory
+from langchain.memory import ConversationBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os, json, asyncio, httpx, traceback

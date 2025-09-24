@@ -39,7 +39,7 @@ class MemoryStore:
 
         self.index = self.client.Index(INDEX_NAME)
         self.store = {}  # In-memory store
-        model_path = os.path.join(os.path.dirname(__file__), "models", "all-MiniLM-L6-v2")
+        model_path ="all-MiniLM-L6-v2"# os.path.join(os.path.dirname(__file__), "models", "all-MiniLM-L6-v2")
         self.embedder = SentenceTransformer(model_path)
     # Serialize metadata (dict/list -> JSON)
     def _serialize_metadata(self, meta_dict):
