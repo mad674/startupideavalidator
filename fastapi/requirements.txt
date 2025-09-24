@@ -9,4 +9,5 @@ fpdf
 httpx
 pinecone
 crypto
-
+pycryptodome
+dotenv

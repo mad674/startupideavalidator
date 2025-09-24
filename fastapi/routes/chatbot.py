@@ -167,10 +167,12 @@ class UpdateIdeaInput(BaseModel):
 class GatherInfoInput(BaseModel):
     query: Optional[str]=None
 
+
+
 def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
-    def retrieve_idea_tool(_: str = "") -> str:
+    def retrieve_idea_tool() -> str:
         return _impl_retrieve_idea(user_id, idea_id)
-    def summarize_history_tool(_: str = "") -> str:
+    def summarize_history_tool() -> str:
         return _impl_summarize_history(user_id, idea_id)
     def update_idea_tool(input: UpdateIdeaInput) -> str:
         """
