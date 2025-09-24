@@ -1,7 +1,5 @@
+##🚀 Startup Validator – Full Stack Project
 ---
-
-# 🚀 Startup Validator – Full Stack Project
-
 ## 📌 Overview
 
 **Startup Validator** is an AI-powered platform that helps entrepreneurs **validate and refine their startup ideas**.
