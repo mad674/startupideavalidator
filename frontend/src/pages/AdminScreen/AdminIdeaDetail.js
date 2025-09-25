@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../../components/Popups/Popup";
-import "./AdminIdeaDetail.css";
+
 const AdminIdeaDetail = ({ onLogout,adminId, token }) => {
   const { ideaId } = useParams();
   const [idea, setIdea] = useState(null);
