@@ -56,8 +56,8 @@ export default function Chatbot() {
   // Step 2: once apiKey is ready, open WebSocket
   useEffect(() => {
     if (!apiKey) return;
-
-    ws.current = new WebSocket(`ws://${process.env.REACT_APP_CHATBOT}/api/ws/chat`);
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    ws.current = new WebSocket(`${protocol}://${process.env.REACT_APP_CHATBOT}/api/ws/chat`);
 
     ws.current.onopen = () => {
       ws.current.send(
