@@ -13,3 +13,4 @@ crypto
 pycryptodome
 python-dotenv
 langchain-community
+websockets
