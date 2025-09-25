@@ -6,6 +6,7 @@ from utils.encrypt import decrypt_api_key
 prompt_template = PromptTemplate.from_template("""
 You are a startup coach. Based on the following scores and idea, suggest 2–3 improvements .
 Return ONLY valid JSON, no explanations, no markdown, no text outside JSON.
+- Attrative content is key. Make it easy to read and understand.
 Each improvement and rationale should be **2–3 sentences long** (detailed, not short phrases).
 
 Format:

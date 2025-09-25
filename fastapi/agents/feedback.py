@@ -12,7 +12,7 @@ A user has submitted an idea. Analyze it and provide constructive, detailed feed
 - The feedback must be in 2 to 3 paragraphs.
 - Each paragraph should be 3 to 4 lines long.
 - Do not include suggestions or action steps, only observations and insights.
-
+- Attrative content is key. Make it easy to read and understand.
 This is the idea:
 "{idea}"
 

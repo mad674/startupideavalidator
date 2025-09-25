@@ -132,7 +132,8 @@ export default function Settings() {
         </button>
 
         <hr />
-        <button><Link to="/api_key">change api key</Link></button>
+        <h3>Change API Key</h3>
+        <Link to="/api_key"><button>change api key</button></Link>
         <h3>Delete All My Ideas</h3>
         <button
           onClick={handleDeleteAllIdeas}
