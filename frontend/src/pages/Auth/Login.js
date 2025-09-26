@@ -37,7 +37,7 @@ export default function Login({ onLogin }) {
         <p className="login-subtitle">Login to continue to your dashboard</p>
 
         <form onSubmit={handleSubmit} className="login-form">
-          <label>Email</label>
+          <label>Email<span>*</span></label>
           <input
             type="email"
             value={form.email}
@@ -46,7 +46,7 @@ export default function Login({ onLogin }) {
             placeholder="Enter your email"
           />
 
-          <label>Password</label>
+          <label>Password<span>*</span></label>
           <input
             type="password"
             value={form.password}

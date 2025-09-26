@@ -119,10 +119,16 @@
 
 
 .login-form label {
-  font-size: 0.9rem;
-  color: var(--text-dark);
+  display: flex;
+  margin-bottom: var(--space-xs);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
 }
-
+span{
+  color: red;
+  margin-left: 2px;
+}
 .login-form input {
   padding: 12px;
   border-radius: 8px;

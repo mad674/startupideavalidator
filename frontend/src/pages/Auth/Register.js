@@ -41,7 +41,7 @@ export default function Register({ onLogin }) {
         <p className="register-subtitle">Sign up to access your dashboard</p>
 
         <form onSubmit={handleSubmit} className="register-form">
-          <label>Email</label>
+          <label>Email<span>*</span></label>
           <input
             type="email"
             value={form.email}
@@ -50,7 +50,7 @@ export default function Register({ onLogin }) {
             placeholder="Enter your email"
           />
 
-          <label>Password</label>
+          <label>Password<span>*</span></label>
           <input
             type="password"
             value={form.password}

@@ -60,7 +60,8 @@ export default function CreateIdea() {
     <div className="create-idea">
       <h2>Create Startup Idea</h2>
       <form className="card form" onSubmit={submit}>
-        <label>Name
+        <label>
+          <h7>Name<span>*</span></h7>
           <input name="name" value={form.name} onChange={change} required placeholder='Enter startup name' />
         </label>
         <label>Problem Statement

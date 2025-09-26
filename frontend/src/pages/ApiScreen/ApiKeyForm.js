@@ -156,7 +156,7 @@ export default function ApiKeyForm() {
 
           {/* API Key */}
           <label className="api-label">
-            API Key
+            <h7>API Key<span>*</span></h7>
             <div className="input-wrapper">
               <input
                 type={showKey ? "text" : "password"}
