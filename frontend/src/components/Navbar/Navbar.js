@@ -43,28 +43,6 @@ export default function Navbar({ onLogout }) {
           )}
         </div>
       </nav>
-
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <button className="close-sidebar" onClick={() => setSidebarOpen(false)}>
-          ×
-        </button>
-        <div className="sidebar-links">
-          {menuLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={location.pathname === link.path ? "active" : ""}
-              onClick={() => setSidebarOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
-          <button className="sidebar-logout" onClick={onLogout}>
-            Logout
-          </button>
-        </div>
-      </div>
     </>
   );
 }
