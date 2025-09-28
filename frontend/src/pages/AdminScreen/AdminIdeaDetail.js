@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../../components/Popups/Popup";
 
-const AdminIdeaDetail = ({ onLogout,adminId, token }) => {
+const AdminIdeaDetail = () => {
+  const session = JSON.parse(localStorage.getItem("adminSession"));
+  const token =session?.token;
+  const adminId = session?.adminId;
   const { ideaId } = useParams();
   const [idea, setIdea] = useState(null);
   const [loading, setLoading] = useState(false);

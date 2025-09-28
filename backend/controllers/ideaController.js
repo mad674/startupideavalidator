@@ -307,7 +307,7 @@ const getIdeaById = async (req, res, next) => {
   try {
     
     const idea = await Idea.findById(req.params.idea_id);
-    if (!idea) return res.status(404).json({ message: 'Idea not found' });
+    if (!idea) return res.status(404).json({ success:false,message: 'Idea not found' });
     res.json({ success: true, idea: idea });
   } catch (err) {
     console.error('Error in getIdeaById:', err);

@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../components/Popups/Popup";
 
-const AdminUsersPage = ({ onLogout,adminId, token }) => {
+const AdminUsersPage = () => {
+  const session = JSON.parse(localStorage.getItem("adminSession"));
+  const token =session?.token
+  const adminId = session?.adminId;
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,6 +79,10 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
     }
   };
 
+  const Logout=()=>{
+    localStorage.removeItem("adminSession")
+    navigate("/admin")
+  }
   const deleteAllUsers = async () => {
     if (!window.confirm("Are you sure you want to delete all users?")) return;
     try {
@@ -176,9 +183,10 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
           style={styles.searchInput}
         />
         <div>
+          <button style={styles.deleteAllBtn} onClick={()=>navigate("/adminexpertdashboard")}>Experts Dashboard</button>
           <button style={styles.deleteAllBtn} onClick={deleteAllUsers}>Delete All Users</button>
           <button style={styles.deleteAllBtn} onClick={deleteAllIdeas}>Delete All Ideas</button>
-          <button style={styles.deleteAllBtn} onClick={()=>onLogout()}>Logout</button>
+          <button style={styles.deleteAllBtn} onClick={()=>Logout()}>Logout</button>
         </div>
       </div>
       
@@ -200,8 +208,8 @@ const AdminUsersPage = ({ onLogout,adminId, token }) => {
       )}
     </div>
   );
-};
 
+};
 const styles = {
   container: {
     padding: "20px",

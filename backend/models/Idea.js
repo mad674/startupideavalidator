@@ -14,6 +14,7 @@ const ideaSchema = new mongoose.Schema({
     score: {type:Object,default: {}},
     suggestions: {type:Object,default: {}},
     feedback: {type:Object,default: {}},
+    experts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Expert' }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date,default: null }, 
 }, { timestamps: true });

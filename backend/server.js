@@ -4,6 +4,7 @@ const cors = require('cors');
 const ideaRoutes = require('./routes/ideaRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const expertRoutes = require('./routes/expertRoutes');
 
 const errorHandler  = require('./middleware/errorHandler');
 const connectDB = require('./config/db'); // DB connection file
@@ -30,6 +31,7 @@ app.head('/health', (req, res) => {
 app.use('/idea', ideaRoutes); // Idea routes are prefixed with '/idea'
 app.use('/user', userRoutes); // User routes are prefixed with '/user'
 app.use('/admin', adminRoutes); // Admin routes are prefixed with '/admin'
+app.use('/expert', expertRoutes); // Expert routes are prefixed with '/expert'
 // Error Handler Middleware
 app.use(errorHandler);
 

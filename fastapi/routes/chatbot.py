@@ -156,7 +156,7 @@ def _impl_gather_info(query: str) -> str:
 # Tools factory
 # -----------------------------
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,Union
 
 class UpdateIdeaInput(BaseModel):
     name: Optional[str] = None
@@ -166,15 +166,18 @@ class UpdateIdeaInput(BaseModel):
     team: Optional[str] = None
     business_model: Optional[str] = None
 class GatherInfoInput(BaseModel):
-    query: Optional[str]=None
+    query: str
 
 
 
 def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
-    def retrieve_idea_tool() -> str:
+    
+    def retrieve_idea_tool(_dummy: Optional[str] = None) -> str:
         return _impl_retrieve_idea(user_id, idea_id)
-    def summarize_history_tool() -> str:
+
+    def summarize_history_tool(_dummy: Optional[str] = None) -> str:
         return _impl_summarize_history(user_id, idea_id)
+        
     def update_idea_tool(input: UpdateIdeaInput) -> str:
         """
         Update idea fields. Assumes `input` is always a Pydantic model.
@@ -192,8 +195,11 @@ def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
         except Exception as e:
             return f"Error updating idea: {e}"
 
-    def gather_info(input:GatherInfoInput) -> str:
-        raw_results = _impl_gather_info(input.query)
+    def gather_info(input: Union[GatherInfoInput, str]) -> str:
+        query = input.query if hasattr(input, "query") else input
+        if not query:
+            return "Query is required."
+        raw_results = _impl_gather_info(query)
         if not raw_results:
             return "No relevant info found."
 
@@ -203,8 +209,20 @@ def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
         summary = llm.invoke([HumanMessage(content=prompt)])
         return summary.content
     return [
-        Tool(name="retrieve_idea", description="Get the current startup idea.", func=retrieve_idea_tool),
-        Tool(name="summarize_history", description="Summarize recent chat history.", func=summarize_history_tool),
+        Tool(
+            name="retrieve_idea", 
+            description="Get the current startup idea.", 
+            func=retrieve_idea_tool,
+            args_schema=None,
+            return_direct=True
+        ),
+        Tool(
+            name="summarize_history", 
+            description="Summarize recent chat history.", 
+            func=summarize_history_tool,
+            args_schema=None,
+            return_direct=True
+        ),
         Tool(
             name="update_idea",
             description="Update idea fields after user confirmation. input should be a Pydantic model.",
@@ -428,7 +446,15 @@ async def chat_endpoint(websocket: WebSocket):
             # Otherwise, normal agent flow
             try:
                 result = await agent_executor.ainvoke({"input": message})
-                final_response = result.get("output", "").strip() if isinstance(result, dict) else str(result)
+                if isinstance(result, dict) and "output" in result:
+                    final_response = result["output"].strip()
+                else:
+                    final_response = str(result).strip()
+                print("---- Agent raw result ----")
+                print(result)
+                print("---- Final response ----")
+                print(result.get("output", ""))
+
                 # Detect if agent is asking for confirmation and output contains JSON update
                 import re, json
                 json_match = re.search(r'```json\s*({[\s\S]*?})\s*```', final_response)

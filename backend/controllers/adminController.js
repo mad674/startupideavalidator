@@ -1,5 +1,6 @@
 const Idea = require('../models/Idea');
 const User = require('../models/User');
+const Expert = require('../models/expert');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
@@ -44,6 +45,19 @@ const getallideas = async (req, res) => {
         }
         const ideas = await Idea.find().sort({ createdAt: -1 });
         res.json({"ideas": ideas});
+    } catch (err) {
+        console.error('Error fetching all ideas:', err);
+        next(err);
+    }
+};
+const getallexpects = async (req, res) => {
+    const username  = req.params.admin_id;        
+    try {
+        if(process.env.ADMIN_NAME!=username){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+        const ideas = await Expert.find().sort({ createdAt: -1 });
+        res.json({"experts": ideas});
     } catch (err) {
         console.error('Error fetching all ideas:', err);
         next(err);
@@ -143,6 +157,36 @@ const deletealluserideas = async (req, res, next) => {
     }
 };
 
+const deleteExpert = async (req, res) => {
+  try {
+    const username= req.params.admin_id;
+    const {expert_id}=req.body;
+    const expertId = expert_id;
+    if(username!=process.env.ADMIN_NAME){
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    // 1. Find expert
+    const expert = await Expert.findById(expertId);
+    if (!expert) {
+      return res.status(404).json({ success: false, message: "Expert not found" });
+    }
+
+    // 2. Remove expert reference from all ideas
+    await Idea.updateMany(
+      { experts: expertId },
+      { $pull: { experts: expertId } }  // remove expertId from experts array
+    );
+
+    // 3. Delete expert
+    await Expert.findByIdAndDelete(expertId);
+
+    res.status(200).json({ success: true, message: "Expert deleted and references removed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+};
+
 const deleteallideas= async (req, res, next) => {
     const username  = req.params.admin_id;
     try {
@@ -237,11 +281,31 @@ const deleteAllUsers = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
-
+const deleteAllExpert= async (req, res) => {
+    const username  = req.params.admin_id;
+    try {
+        if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+        const experts = await Expert.find();
+        for (const expert of experts) {
+            await Idea.updateMany(
+                  { experts: expert._id },
+                  { $pull: { experts: expert._id } }  // remove expertId from experts array
+                );
+            await Expert.findByIdAndDelete(expert._id);
+        }
+        res.status(200).json({ success: true, message: 'All experts deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting all experts:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 
 module.exports = { 
     getallideas,
+    getallexpects,
     changeAdminPassword ,
     getalluserideas,
     deleteidea, 
@@ -249,6 +313,8 @@ module.exports = {
     getAllUsers,
     deleteUserByAdmin,
     deleteAllUsers,
+    deleteExpert,
+    deleteAllExpert,
     adminlogin,
     deleteallideas
 };

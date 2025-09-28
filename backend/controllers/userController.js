@@ -1,9 +1,30 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { updateOne } = require('../models/Idea');
 const Idea = require('../models/Idea');
 const { encryptApiKey, decryptApiKey } = require('../utils/encrypt');
+const dotenv = require('dotenv');
+const nodemailer=require("nodemailer");
+
+dotenv.config();
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+//set api key for user
+const providerUrls = {
+  groq: "https://api.groq.com/openai/v1",
+  openai: "https://api.openai.com/v1",
+  together: "https://api.together.xyz/v1",
+  fireworks: "https://api.fireworks.ai/inference/v1",
+  mistral: "https://api.mistral.ai/v1",
+};
+
 // REGISTER CONTROLLER
 const register = async (req, res, next) => {
     try {
@@ -76,14 +97,6 @@ const login = async (req, res, next) => {
     }
 };
 
-//set api key for user
-const providerUrls = {
-  groq: "https://api.groq.com/openai/v1",
-  openai: "https://api.openai.com/v1",
-  together: "https://api.together.xyz/v1",
-  fireworks: "https://api.fireworks.ai/inference/v1",
-  mistral: "https://api.mistral.ai/v1",
-};
 
 const validateApiKey = async (apikey, provider, model_name) => {
   const controller = new AbortController();
@@ -125,7 +138,6 @@ const validateApiKey = async (apikey, provider, model_name) => {
     clearTimeout(timeout);
   }
 };
-
 
 const checkApiKey = async (req, res, next) => {
   try {
@@ -315,5 +327,58 @@ const getAllUsers = async (req, res, next) => {
     }
 };
 
+const ForgotPassword=async (req, res) => {
+  const { email } = req.body;
 
-module.exports = { getuserapikey,checkApiKey,setApiKey,getAllUsers, register, login, getUserDetails, updateUserDetails, deleteUser };
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const otp = Math.floor(1000 + Math.random() * 9000); // 4-digit OTP
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+
+    user.otp = otp;
+    user.otpExpiresAt = otpExpiresAt;
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your OTP to reset password for the website startup idea validator!",
+      html: `<p>Your OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
+    });
+
+    res.json({ success: true, message: "OTP sent to your email", userId: user._id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const ResetPasswordOtp=async (req, res) => {
+  const { userId, otp, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (!user.otp || user.otpExpiresAt < new Date())
+      return res.status(400).json({ success: false, message: "OTP expired" });
+
+    if (user.otp != otp)
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.otp = null;           // clear OTP
+    user.otpExpiresAt = null;  // clear expiry
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = { ResetPasswordOtp,ForgotPassword,getuserapikey,checkApiKey,setApiKey,getAllUsers, register, login, getUserDetails, updateUserDetails, deleteUser };
