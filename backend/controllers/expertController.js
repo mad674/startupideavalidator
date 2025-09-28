@@ -1,4 +1,4 @@
-const Expert = require('../models/expert');
+const Expert = require('../models/Expert');
 const Idea = require('../models/Idea');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');

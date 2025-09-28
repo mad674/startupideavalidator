@@ -10,9 +10,6 @@ const AdminExpertDashboard = () => {
   const [experts, setExperts] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedExpert, setSelectedExpert] = useState(null);
-  const [expertIdeas, setExpertIdeas] = useState([]);
-  const [ideaSearch, setIdeaSearch] = useState("");
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -56,10 +53,13 @@ const AdminExpertDashboard = () => {
   const deleteAllExperts = async () => {
     if (!window.confirm("Are you sure you want to delete all experts?")) return;
     try {
-      await fetch(`${process.env.REACT_APP_BACKEND}/admin/deleteAllExpert/${adminId}`, {
+      const res=await fetch(`${process.env.REACT_APP_BACKEND}/admin/deleteAllExpert/${adminId}`, {
         method: "DELETE",
         headers: { Authorization: token },
       });
+      const data=await res.json();
+      if(!data.success) return showToast(data.message,data.success);
+      showToast("All experts deleted successfully");
       fetchAllExperts();
     } catch (err) {
       console.error(err);

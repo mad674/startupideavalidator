@@ -106,7 +106,7 @@ const ExpertSelection = () => {
 
   return (
     <div className="expert-selection">
-      <h2>Your Connected Experts</h2>
+      <h2>Connected Experts</h2>
       {selectedExpert.length === 0 ? (
         <p>No experts connected yet.</p>
       ) : (

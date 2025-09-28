@@ -41,7 +41,7 @@ const AdminIdeaDetail = () => {
   const deleteIdea = async () => {
     if (!window.confirm("Are you sure you want to delete this idea?")) return;
     try {
-      await fetch(
+      const res=await fetch(
         `${process.env.REACT_APP_BACKEND}/admin/deleteidea/${adminId}`,
         {
             method: "POST",
