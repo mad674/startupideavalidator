@@ -121,79 +121,100 @@ startup-validator/
    App runs at: [http://localhost:3000](http://localhost:3000)
 
 ---
+Project Name: AI-Powered Startup Validator (with Expert Integration)
 
-## 📚 Documentation
+1. Project Overview:
+"This project is a platform designed to help entrepreneurs validate their startup ideas efficiently. Users can submit their ideas and get instant feedback and scoring, while experts can provide deeper analysis, suggestions, and mentorship."
 
-* [Configuration Guide](./docs/configuration.md) – Environments & deployment
-* [API Reference](./docs/api_reference.md) – Endpoints with examples
-* [Architecture](./docs/architecture.md) – System & class diagrams
+2. Key Features:
 
----
+For Users:
 
-## 🚀 Deployment
+Idea Submission: Users submit startup ideas with structured information.
 
-### Staging
+Instant Scoring & Feedback: AI analyzes the idea and generates a validation score with suggestions.
 
-```bash
-APP_ENV=staging uvicorn backend.main:app --host 0.0.0.0 --port 8000
-```
+History Tracking: Users can view all their past submissions and feedback.
 
-### Production (Gunicorn + Uvicorn)
+Secure Login & Registration: Users authenticate securely with email and password.
 
-```bash
-APP_ENV=production gunicorn -k uvicorn.workers.UvicornWorker backend.main:app
-```
+For Experts:
 
-### Docker Compose
+Expert Dashboard: Experts can view submitted ideas, provide scores, and detailed feedback.
 
-```yaml
-version: "3.9"
-services:
-  backend:
-    build: ./backend
-    env_file: .env.production
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-  frontend:
-    build: ./frontend
-    env_file: .env.production
-    ports:
-      - "3000:3000"
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: startup_db
-    ports:
-      - "5432:5432"
-```
+Profile Management: Experts can update their profile and bio.
 
----
+Idea Interaction: Experts can comment, suggest improvements, and track previously reviewed ideas.
 
-## 📌 Milestones
+Admin/Platform Features:
 
-* ✅ **Week-VI**: User login & role-based access
-* ✅ **Week-VIII**: Idea update tools & PDF report generation
-* ✅ **Week-IX**: Multi-env config & API docs update
-* 🔄 **Next**: Full deployment & user testing
+User & Expert Management: Admin can manage users and experts.
 
----
+OTP Authentication: Secure password reset via email OTP.
 
-## 🤝 Contributing
+3. Technology Stack:
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/foo`)
-3. Commit your changes (`git commit -m 'Add foo'`)
-4. Push the branch (`git push origin feature/foo`)
-5. Open a Pull Request
+Frontend: React.js
 
----
+Responsive UI for user, expert, and admin interfaces
 
-## 📄 License
+Components: Login, Registration, Dashboard, Chat, Idea Submission Form
 
-Licensed under the **MIT License** – feel free to use and adapt.
+Styling: TailwindCSS & custom CSS with gradient animations and glassmorphism design
 
----
+Backend: FastAPI (Python)
+
+REST APIs for users, experts, idea validation, feedback, and authentication
+
+Token-based authentication (JWT)
+
+Email OTP system for secure password reset
+
+Database: MongoDB
+
+Collections: Users, Experts, Ideas, Feedback
+
+Storing structured idea data and expert suggestions
+
+AI Integration:
+
+AI scoring engine (could be OpenAI or custom ML models)
+
+Generates idea validation score and textual suggestions
+
+Other Tools:
+
+React Router for page navigation
+
+Toast/Notification system for user feedback
+
+4. Architecture Overview:
+
+Users and experts interact with the React frontend.
+
+Frontend sends requests to the FastAPI backend.
+
+Backend interacts with MongoDB to store/retrieve data.
+
+AI scoring service evaluates ideas.
+
+OTP emails are sent via an external email service.
+
+Data Flow Example:
+
+User submits idea → Backend validates → AI generates score → Stored in DB → User sees result.
+
+Expert reviews idea → Provides feedback → Stored in DB → User notified.
+
+5. Achievements / Complexity:
+
+Full user-expert integration completed.
+
+Implemented secure authentication with OTP.
+
+Responsive, animated, and modern UI for a seamless experience.
+
+AI-powered scoring for real-time idea validation.
+
+6. Why it’s useful:
+"This platform bridges the gap between aspiring entrepreneurs and domain experts, enabling rapid validation, learning, and iterative improvement of startup ideas. It reduces the time and uncertainty in evaluating a startup’s potential."
