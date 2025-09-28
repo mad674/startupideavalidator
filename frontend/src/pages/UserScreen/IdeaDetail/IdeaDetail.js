@@ -122,7 +122,7 @@ export default function IdeaDetail() {
         <button onClick={() => navigate(`/idea/updateidea/${id}`)}>
           Update Idea
         </button>
-        <button onClick={() => navigate(`/ExpertSelection/${id}`)}>chat with Expert</button>
+        <button onClick={() => navigate(`/ExpertSelection/${id}`)}> 🎉chat with Expert🎉</button>
         <button onClick={handleDelete} className="delete-btn">
           Delete Idea
         </button>
