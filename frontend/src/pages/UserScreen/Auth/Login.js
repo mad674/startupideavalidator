@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 import { useToast } from "../../../components/Popups/Popup";
@@ -29,7 +29,11 @@ export default function Login({ onLogin }) {
       showToast("An error occurred while logging in.");
     }
   };
-
+  useEffect(()=>{
+        localStorage.removeItem("adminSession");
+        localStorage.removeItem("expertSession");
+        if(localStorage.getItem("token")){ navigate("/dashboard");}
+  },[navigate]);
   return (
     <div className="login-container">
       <div className="login-card">

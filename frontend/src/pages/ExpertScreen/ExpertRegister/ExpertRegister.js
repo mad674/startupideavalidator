@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./ExpertRegister.css";
 import { useToast } from "../../../components/Popups/Popup";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +36,11 @@ const ExpertRegister = ({ onLogin }) => {
       showToast("Registration failed");
     }
   };
-
+  useEffect(()=>{
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminSession");
+    if(localStorage.getItem("expertSession")){ navigate("/expert/dashboard");}
+  },[navigate]);
   return (
     <div className="expert-register">
       <h2>Expert Register</h2>

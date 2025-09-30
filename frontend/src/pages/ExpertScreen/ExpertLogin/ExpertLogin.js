@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import "./ExpertLogin.css";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../components/Popups/Popup";
@@ -30,7 +30,11 @@ const ExpertLogin = ({onLogin}) => {
       showToast("Login failed");
     }
   };
-
+  useEffect(()=>{
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminSession");
+      if(localStorage.getItem("expertSession")){navigate("/expert/dashboard");}
+    },[navigate]);
   return (
     <div className="expert-login">
       <h2>Expert Login</h2>

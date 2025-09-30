@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Register.css";
 import { useToast } from "../../../components/Popups/Popup";
@@ -33,7 +33,11 @@ export default function Register({ onLogin }) {
       setLoading(false);
     }
   };
-
+  useEffect(()=>{
+        localStorage.removeItem("adminSession");
+        localStorage.removeItem("expertSession");
+        if(localStorage.getItem("token")){ navigate("/dashboard");}
+  },[navigate]);
   return (
     <div className="register-container">
       <div className="register-card">

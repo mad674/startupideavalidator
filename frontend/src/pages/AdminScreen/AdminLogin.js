@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 
@@ -31,7 +31,11 @@ const AdminLogin = ({ onLogin }) => {
       setError("Server error. Try again later.");
     }
   };
-
+  useEffect(()=>{
+      localStorage.removeItem("token");
+      localStorage.removeItem("expertSession");
+      if(localStorage.getItem("adminSession")){ navigate("/admindashboard");}
+  },[navigate]);
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Admin Login</h2>

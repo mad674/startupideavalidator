@@ -1,6 +1,6 @@
 const Idea = require('../models/Idea');
 const User = require('../models/User');
-const Expert = require('../models/expert');
+const Expert = require('../models/Expert');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
