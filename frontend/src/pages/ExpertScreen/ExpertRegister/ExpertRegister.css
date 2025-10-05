@@ -29,13 +29,13 @@
   padding: 10px;
   border: none;
   border-radius: 6px;
-  background: #4caf50;
+  background: #2196f3;
   color: white;
   cursor: pointer;
 }
 
 .expert-register button:hover {
-  background: #43a047;
+  background: #1976d2;
 }
 
 .expert-register .msg {

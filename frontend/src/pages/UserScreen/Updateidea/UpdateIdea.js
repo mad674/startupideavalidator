@@ -104,6 +104,7 @@ export default function UpdateIdea() {
             name="problem_statement"
             value={formData.problem_statement}
             onChange={handleChange}
+            required
           />
         </label>
         <label>
@@ -112,6 +113,7 @@ export default function UpdateIdea() {
             name="solution"
             value={formData.solution}
             onChange={handleChange}
+            required
           />
         </label>
         <label>

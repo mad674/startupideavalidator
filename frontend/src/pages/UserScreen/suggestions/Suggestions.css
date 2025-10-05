@@ -11,7 +11,7 @@
 
 .suggestions-container {
   font-family: "Inter", sans-serif;
-  background: var(--bg-light);
+  /* background: var(--bg-light); */
   min-height: 80vh;
   padding: 50px 20px;
   display: flex;

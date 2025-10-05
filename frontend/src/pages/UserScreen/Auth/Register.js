@@ -48,6 +48,7 @@ export default function Register({ onLogin }) {
           <label>Email<span>*</span></label>
           <input
             type="email"
+            name="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
@@ -57,6 +58,7 @@ export default function Register({ onLogin }) {
           <label>Password<span>*</span></label>
           <input
             type="password"
+            name="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required

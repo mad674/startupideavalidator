@@ -13,7 +13,7 @@
   padding: var(--space-xl) var(--space-lg);
   color: black;
   min-height: 100vh;
-  background: var(--surface-50);
+  /* background: var(--surface-50); */
 }
 
 /* Dashboard Header */

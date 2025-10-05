@@ -64,17 +64,17 @@ export default function CreateIdea() {
           <h7>Name<span>*</span></h7>
           <input name="name" value={form.name} onChange={change} required placeholder='Enter startup name' />
         </label>
-        <label>Problem Statement
-          <textarea name="problem_statement" value={form.problem_statement} onChange={change} rows="3" placeholder="Describe the problem you're solving" />
+        <label><h7>Problem Statement<span>*</span></h7>
+          <textarea name="problem_statement" value={form.problem_statement} required onChange={change} rows="3" placeholder="Describe the problem you're solving" />
         </label>
-        <label>Solution
-          <textarea name="solution" value={form.solution} onChange={change}  rows="3" placeholder='Explain your solution to the problem '/>
+        <label><h7>Solution<span>*</span></h7>
+          <textarea name="solution" value={form.solution} onChange={change} required  rows="3" placeholder='Explain your solution to the problem '/>
         </label>
         <label>Target Market
           <textarea name="target_market" value={form.target_market} onChange={change} placeholder='Enter target market'  />
         </label>
         <label>Business Model
-          <textarea name="business_model" value={form.business_model} onChange={change} placeholder='Describe business model'  />
+          <textarea name="business_model" value={form.business_model}  onChange={change} placeholder='Describe business model'  />
         </label>
         <label>Team
           <textarea name="team" value={form.team} onChange={change}placeholder='Tell us about your team' rows="2" />

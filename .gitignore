@@ -18,3 +18,4 @@ fastapi/utils/__pycache__/
 # backend/env
 # fastapi/env
 # frontend/env
+test_ui.py

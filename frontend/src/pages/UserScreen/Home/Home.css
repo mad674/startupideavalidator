@@ -13,7 +13,7 @@
   padding: 0;
   margin: 0;
   overflow-x: hidden;
-  background-color: #f9fafb; /* soft page background */
+  /* background-color: #f9fafb;  */
 }
 
 /* Hero Section */
@@ -24,7 +24,7 @@
   gap: 60px;
   align-items: center;
   animation: fadeIn 1s ease-out;
-  background: linear-gradient(135deg, #e0f2fe, #f1f5f9); /* soft gradient */
+  background: linear-gradient(135deg, #e0f2fe, #f1f5f9);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
 }

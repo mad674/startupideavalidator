@@ -35,6 +35,9 @@ export default function ForgotPassword() {
   return (
     <div className="forgot-password-container">
       <h2>Forgot Password</h2>
+      <p className="forgot-subtitle">
+          Enter your registered email to receive a one-time password (OTP).
+        </p>
       <form onSubmit={handleRequestOTP} className="forgot-password-form">
         <input
           type="email"

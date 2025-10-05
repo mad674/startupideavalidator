@@ -62,9 +62,9 @@ const ExpertRegister = ({ onLogin }) => {
           onChange={handleChange}
           style={{padding:'12px',borderRadius:'8px',border:'1px solid #bbb',fontSize:'1rem'}}
         />
-        <button type="submit" style={{padding:'12px',borderRadius:'8px',border:'none',background:'linear-gradient(90deg,#43a047,#66bb6a)',color:'#fff',fontWeight:600,fontSize:'1rem',cursor:'pointer',boxShadow:'0 2px 8px rgba(67,160,71,0.12)',transition:'background 0.2s'}}>Register</button>
+        <button type="submit" style={{padding:'12px',borderRadius:'8px',border:'none',color:'#fff',fontWeight:600,fontSize:'1rem',cursor:'pointer',boxShadow:'0 2px 8px rgba(67,160,71,0.12)',transition:'background 0.2s'}}>Register</button>
       </form>
-      Alredy have an account? <a href="/expert/login" style={{color:'#43a047',textDecoration:'none',fontWeight:600}}>Login here</a>
+      Alredy have an account? <a href="/expert/login" style={{textDecoration:'none',fontWeight:600}}>Login here</a>
       {/* {message && <p className="msg" style={{marginTop:'10px',color:'#444',textAlign:'center'}}>{message}</p>} */}
     </div>
   );
