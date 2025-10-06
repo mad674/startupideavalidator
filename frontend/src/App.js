@@ -1,7 +1,7 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// import React from "react";
+import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import useAuth from "./pages/UserScreen/Auth/useAuth";
-
+// import { useState,useEffect } from "react";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/UserScreen/Home/Home";
 import Dashboard from "./pages/UserScreen/Dashboard/Dashboard";
@@ -55,6 +55,9 @@ export default function App() {
       ? children
       : <Navigate to="/expert/login" replace />;
   };
+  
+
+
   return (
     <BrowserRouter>
       {isAuthenticated && <Navbar onLogout={logout} />}

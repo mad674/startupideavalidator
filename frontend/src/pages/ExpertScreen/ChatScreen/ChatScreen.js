@@ -125,9 +125,10 @@ const ChatScreen = () => {
                 {msg.sender === "expert" && <button
                   onClick={() => handleDeleteMessage(msg._id)}
                   style={{
-                    position: "absolute",
-                    width: "50px",
-                    height: "50px",
+                    // position: "absolute",
+                    // width: "50px",
+                    // height: "50px",
+                    margin: "10px",
                     background: "transparent",
                     border: "none",
                     color: "red",
@@ -143,38 +144,18 @@ const ChatScreen = () => {
         )}
         <div ref={chatEndRef} />
       </div>
-      <div className="chat-input">
-        <input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          style={{
-            padding: "12px",
-            borderRadius: "8px",
-            border: "1px solid #bbb",
-            fontSize: "1rem",
-            flex: 1,
-          }}
-        />
-        <button
-          onClick={sendMessage}
-          style={{
-            padding: "12px 20px",
-            borderRadius: "8px",
-            border: "none",
-            background: "linear-gradient(90deg,#43a047,#66bb6a)",
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: "1rem",
-            cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(67,160,71,0.12)",
-            transition: "background 0.2s",
-          }}
-        >
-          Send
-        </button>
+      <div className="chat-inputs">
+          <input
+            className="chat-input-field"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message..."
+          />
+          <button className="chat-send-btn" onClick={sendMessage}>
+            Send
+          </button>
+        </div>
       </div>
-    </div>
   );
 };
 
