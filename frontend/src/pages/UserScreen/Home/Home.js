@@ -1,8 +1,41 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import "./Home.css";
 
 export default function Home() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    });
+
+    // Optional: Detect if app is already installed
+    window.addEventListener("appinstalled", () => {
+      console.log("App installed!");
+      setShowInstallBtn(false);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const choiceResult = await deferredPrompt.userChoice;
+
+    if (choiceResult.outcome === "accepted") {
+      console.log("User accepted the install prompt");
+    } else {
+      console.log("User dismissed the install prompt");
+    }
+
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
   return (
     <div className="home-wrapper">
       {/* Hero Section */}
@@ -62,6 +95,11 @@ export default function Home() {
           <p>Share your idea with the community and get constructive feedback.</p>
         </div>
       </section>
+      {showInstallBtn && (
+        <button className="install-btn" onClick={handleInstallClick}>
+          Install App
+        </button>
+      )}
     </div>
   );
 }

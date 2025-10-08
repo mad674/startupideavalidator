@@ -45,21 +45,34 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
+  // List of backend API prefixes
+  const apiPrefixes = [
+    "/api/",
+    "/idea/",
+    "/user/",
+    "/admin/",
+    "/expert/",
+    "/health"
+  ];
+
+  const requestUrl = new URL(event.request.url);
+
+  // If request path starts with any API prefix, bypass cache
+  const isApiRequest = apiPrefixes.some(prefix => requestUrl.pathname.startsWith(prefix));
+  if (isApiRequest) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Otherwise, handle caching for frontend static assets
   event.respondWith(
     caches.match(event.request).then(response => {
-      // Serve from cache first
-      if (response) {
-        return response;
-      }
+      if (response) return response;
 
-      // Otherwise fetch from network and cache it
       return fetch(event.request)
         .then(networkResponse => {
-          if (!networkResponse || networkResponse.status !== 200) {
-            return networkResponse;
-          }
+          if (!networkResponse || networkResponse.status !== 200) return networkResponse;
 
-          // Clone and store in cache
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
@@ -71,6 +84,8 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
+
 
 // 🧹 Optional: Enable manual cache refresh
 self.addEventListener("message", event => {

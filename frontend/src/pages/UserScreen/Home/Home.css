@@ -63,6 +63,33 @@
   gap: 15px;
   flex-wrap: wrap;
 }
+/* Install button - floating for mobile */
+.install-btn {
+  display: none; /* default hidden */
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #1e3a8a;
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  font-size: 20px;
+  z-index: 1000;
+}
+
+/* Mobile-only: show button on small screens */
+@media (max-width: 768px) {
+  .install-btn {
+    display: block;
+  }
+}
+
+.install-btn:hover {
+  background-color: #374eb8;
+}
 
 .btn {
   padding: 14px 28px;
