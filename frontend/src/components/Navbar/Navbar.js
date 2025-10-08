@@ -40,7 +40,7 @@ export default function Navbar({ onLogout }) {
 
   return (
     <>
-      {/* Top Navbar */}
+      {/* Top Navbar  */}
       <nav className={`navbar${darkMode ? ' navbar-dark' : ''}`}>
         <div className="navbar-left">
           <button
