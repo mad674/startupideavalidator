@@ -1,4 +1,4 @@
-# AI-Powered Startup Validator - Full Stack Project
+# AI-Powered Startup Validator - Full Stack Project(Progressive Web App)
 
 ## Project Overview
 **AI-Powered Startup Validator** is a platform designed to help entrepreneurs validate their startup ideas efficiently. It combines an **interactive AI agent**, **data-driven validation**, and **real-time chat to guide founders** in improving their problem statements, solutions, target markets, teams, and business models. Users can submit their ideas and receive instant feedback and scoring, while experts provide deeper analysis, suggestions, and mentorship.
