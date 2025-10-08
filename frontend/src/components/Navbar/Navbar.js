@@ -51,7 +51,7 @@ export default function Navbar({ onLogout }) {
             ☰
           </button>
           <Link to="/dashboard" className="navbar-brand">
-            🚀 AI Startup Idea Validator
+            🚀 AI Startup Validator
           </Link>
         </div>
 
