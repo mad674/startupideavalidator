@@ -23,6 +23,7 @@ export default function Dashboard() {
     if (!sessionStorage.getItem("sessionExpired")) {
       showToast("Your session has expired. Please log in again.");
       sessionStorage.setItem("sessionExpired", "true");
+      localStorage.removeItem("token");
     }
     localStorage.removeItem("token");
     navigate("/login", { replace: true });
