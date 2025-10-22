@@ -11,7 +11,7 @@ fastapi/utils/__pycache__/
 # Ignore compiled files
 *.class
 *.pyc
-node_modules/
+
 # Ignore IDE/config files
 .vscode/
 # .env
