@@ -36,12 +36,15 @@ import ExpertProfile from "./pages/UserScreen/ExpertProfile/ExpertProfile";
 import AdminExpertDashboard   from "./pages/AdminScreen/AdminExpertDashboard ";
 import ExpertForgotPassword from "./pages/ExpertScreen/Auth/ExpertForgotPassword";
 import ExpertResetPassword from "./pages/ExpertScreen/Auth/ExpertResetPassword";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
   const { adminSession, login: adminLogin, logout: adminLogout } = useAdminAuth();
   const { expertSession, login: expertLogin, logout: expertLogout } = useExpertAuth();
+  const clientId = "200813946279-v05eo3bae8nlc3nu7qa4lhui1lm8avid.apps.googleusercontent.com";
+
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/" replace />;
   };
@@ -49,6 +52,7 @@ export default function App() {
     const session = JSON.parse(localStorage.getItem("adminSession"));
     return session?.token && session?.adminId ? children : <Navigate to="/admin" replace />;
   };
+
   const ExpertProtectedRoute = ({ children }) => {
     const session = JSON.parse(localStorage.getItem("expertSession"));
     return session?.token && session?.expertId
@@ -72,7 +76,13 @@ export default function App() {
           <Route
             path="/login"
             element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login onLogin={login} />
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <GoogleOAuthProvider clientId={clientId}>
+                  <Login onLogin={login} />
+                </GoogleOAuthProvider>
+              )
             }
           />
           <Route
@@ -255,7 +265,9 @@ export default function App() {
         <Route
           path="/expert/login"
           element={
-            <ExpertLogin onLogin={expertLogin}/>
+            <GoogleOAuthProvider clientId={clientId}>
+              <ExpertLogin onLogin={expertLogin}/>
+            </GoogleOAuthProvider>
           }
         />
         <Route
