@@ -1,0 +1,24 @@
+# Ignore node modules
+node_modules/
+
+# Ignore Python cache
+__pycache__/
+fastapi/__pycache__/
+fastapi/agents/__pycache__/
+fastapi/memory/__pycache__/
+fastapi/routes/__pycache__/
+fastapi/utils/__pycache__/
+# Ignore compiled files
+*.class
+*.pyc
+node_modules/
+# Ignore IDE/config files
+.vscode/
+# .env
+# backend/env
+# fastapi/env
+# frontend/env
+# test_ui.py
+/frontend/build/
+/frontend/node_modules/
+/backend/node_modules/

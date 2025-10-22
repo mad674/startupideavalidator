@@ -1,0 +1,122 @@
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --delete: #dc2626;
+  --delete-hover: #b91c1c;
+  --bg-light: #f8fafc;
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+}
+
+.settings-page {
+  font-family: "Inter", sans-serif;
+  /* background: var(--bg-light); */
+  min-height: 80vh;
+  padding: 50px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.settings-page h2 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.card {
+  background: var(--card-bg);
+  padding: 30px 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px var(--card-shadow);
+  max-width: 450px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card h3 {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.card input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+  width: 100%;
+  margin-bottom: 10px;
+  transition: border 0.2s ease;
+}
+
+.card input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.card button {
+  width: 100%;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.card button:not(.delete-btn) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.card button:not(.delete-btn):hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.card hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 15px 0;
+}
+
+.card .delete-btn {
+  background: var(--delete);
+  color: #fff;
+}
+
+.card .delete-btn:hover {
+  background: var(--delete-hover);
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .card {
+    padding: 20px 15px;
+  }
+
+  .settings-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .card button {
+    font-size: 0.95rem;
+  }
+}

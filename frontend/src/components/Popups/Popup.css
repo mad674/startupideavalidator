@@ -1,0 +1,27 @@
+.popup {
+  position: fixed;
+  top: 5rem;
+  right: 2rem;       /* move to right */
+  min-width: 220px;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  z-index: 999;
+  animation: slideIn 0.3s ease forwards, fadeOut 0.3s ease forwards 2.2s;
+}
+
+.popup-success { background-color: #16a34a; } /* Green */
+.popup-error { background-color: #dc2626; }   /* Red */
+
+/* Animations */
+@keyframes slideIn {
+  0% { opacity: 0; transform: translateX(100%); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(100%); }
+}
