@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+langchain
+langchain-openai
+openai
+sentence-transformers
+python-multipart
+pydantic
+fpdf
+httpx
+pinecone
+crypto
+pycryptodome
+python-dotenv
+langchain-community
+websockets

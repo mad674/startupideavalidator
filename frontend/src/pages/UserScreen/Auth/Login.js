@@ -4,6 +4,7 @@ import "./Login.css";
 import { useToast } from "../../../components/Popups/Popup";
 import GoogleLoginButton from "../../../components/GoogleLoginButton";
  // import {jwtDecode} from "jwt-decode";
+
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -32,7 +33,7 @@ export default function Login({ onLogin }) {
     }
   };
   useEffect(()=>{
-        // setReady(true);
+
         localStorage.removeItem("adminSession");
         localStorage.removeItem("expertSession");
         if(localStorage.getItem("token")){ navigate("/dashboard");}
@@ -98,12 +99,10 @@ export default function Login({ onLogin }) {
           <div style={{ filter: "hue-rotate(95deg) saturate(1)" }}>
             <GoogleLoginButton onSuccess={handleSuccess} onError={handleError} />
           </div>
-          <p className="register-link">
-            Don’t have an account? <Link to="/register">Register</Link>
-            <p className="forgot-link"><Link to="/forgot-password">Forgot Password?</Link></p>
-          </p>
         </form>
+        </div>
       </div>
-    </div>
   );
 }
+
+

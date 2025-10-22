@@ -1,4 +1,4 @@
-// In production, register a service worker to make the app work offline and load faster.
+//tion, register a service worker to make the app work offline and load faster.
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||

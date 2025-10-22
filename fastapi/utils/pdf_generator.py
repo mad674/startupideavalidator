@@ -1,0 +1,96 @@
+# utils/pdf_generator.py
+from fpdf import FPDF
+from datetime import datetime
+import os
+import json
+import re
+
+def clean_text(text: str) -> str:
+    replacements = {
+        "→": "->",
+        "–": "-",
+        "—": "-",
+        "…": "...",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return re.sub(r'[^\x00-\x7F]+', '', str(text))
+
+# At the top of utils/pdf_generator.py
+def safe_load(data):
+    """Convert JSON string to dict if needed."""
+    if isinstance(data, str):
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return {}
+    return data
+
+def generate_pdf(idea: str, structured: dict, scores: dict, suggestions: dict, feedback: dict, user_id: str) -> str:
+    # Convert inputs
+    structured = safe_load(structured)
+    scores = safe_load(scores)
+    suggestions = safe_load(suggestions)
+    feedback = safe_load(feedback)
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 20)
+    pdf.cell(0, 100, "Startup Idea Evaluation Report", ln=True, align='C')
+    pdf.set_font("Arial", '', 14)
+    pdf.cell(0, 10, f"Idea Name: {idea}", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Arial", 'I', 12)
+    pdf.cell(0, 10, f"Generated on {datetime.now().strftime('%Y-%m-%d')}", ln=True, align='C')
+    pdf.add_page()  # then continue with details
+
+
+    # Structured Format
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Structured Format:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    for key, value in structured.items():
+        pdf.multi_cell(0, 8, f"- {key.capitalize()}: {clean_text(value)}")
+    pdf.ln(5)
+
+    # Scores
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Scores:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    for key, value in scores.items():
+        pdf.multi_cell(0, 8, f"- {key}: {value}")
+    pdf.ln(5)
+
+    # Suggestions
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Suggestions:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    for i, suggestion in enumerate(suggestions.get("improvements", []), start=1):
+        pdf.multi_cell(0, 8, f"{i}. {clean_text(suggestion)}")
+    pdf.ln(2)
+    pdf.set_font("Arial", 'I', 10)
+    for i, rationale in enumerate(suggestions.get("rationale", []), start=1):
+        pdf.multi_cell(0, 7, f"   Rationale {i}: {clean_text(rationale)}")
+    pdf.ln(5)
+
+    # Feedback
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "Feedback:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    for i, fb in enumerate(feedback.get("feedbacks", []), start=1):
+        pdf.multi_cell(0, 8, f"{i}. {clean_text(fb)}")
+        pdf.ln(2)
+
+    # Footer
+    pdf.set_y(-30)
+    pdf.set_font("Arial", 'I', 8)
+    pdf.cell(0, 10, f"Generated for User: {user_id} | Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", align='C')
+
+    # Save file
+    output_dir = "/mnt/data"
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f"{user_id}_startup_report.pdf")
+    pdf.output(output_path)
+
+    return output_path
