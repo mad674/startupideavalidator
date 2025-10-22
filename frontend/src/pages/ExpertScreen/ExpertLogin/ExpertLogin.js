@@ -2,8 +2,8 @@ import React, { useState,useEffect } from "react";
 import "./ExpertLogin.css";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../components/Popups/Popup";
-import { GoogleLogin } from "@react-oauth/google";
-import {jwtDecode} from "jwt-decode";
+import GoogleLoginButton from "../../../components/GoogleLoginButton";
+// import {jwtDecode} from "jwt-decode";
 
 const ExpertLogin = ({onLogin}) => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -34,6 +34,7 @@ const ExpertLogin = ({onLogin}) => {
     }
   };
   useEffect(()=>{
+      // setReady(true);
       localStorage.removeItem("token");
       localStorage.removeItem("adminSession");
       if(localStorage.getItem("expertSession")){navigate("/expert/dashboard");}
@@ -43,8 +44,8 @@ const ExpertLogin = ({onLogin}) => {
       const token = credentialResponse.credential;
   
       // Optionally decode on frontend
-      const userInfo = jwtDecode(token);
-      console.log("Google user:", userInfo);
+      // const userInfo = jwtDecode(token);
+      // console.log("Google user:", userInfo);
   
       // Send token to backend
       const res = await fetch(`${process.env.REACT_APP_BACKEND}/expert/google`, {
@@ -54,7 +55,7 @@ const ExpertLogin = ({onLogin}) => {
       });
   
       const data = await res.json();
-      console.log("Backend response:", data);
+      // console.log("Backend response:", data);
       if (data.success) {
         onLogin({ expertId: data.expert.id, token:  `Bearer ${data.token }`});
         showToast(data.message,data.success);
@@ -81,7 +82,7 @@ const ExpertLogin = ({onLogin}) => {
         />
         <button type="submit" style={{padding:'12px',borderRadius:'8px',border:'none',background:'linear-gradient(90deg,#2196f3,#21cbf3)',color:'#fff',fontWeight:600,fontSize:'1rem',cursor:'pointer',boxShadow:'0 2px 8px rgba(33,150,243,0.12)',transition:'background 0.2s'}}>Login</button>
         <div style={{ filter: "hue-rotate(95deg) saturate(1)" }}>
-          <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+          <GoogleLoginButton onSuccess={handleSuccess} onError={handleError} />
         </div>
         </form>
       Don’t have an account? <a href="/expert/register" style={{color:'#2196f3',textDecoration:'none',fontWeight:600}}>Register here</a>
