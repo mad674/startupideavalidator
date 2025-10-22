@@ -7,13 +7,21 @@ import { ToastProvider } from './components/Popups/Popup';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
+if (!clientId) {
+  console.error("Google Client ID is missing!");
+}
 root.render(
   <React.StrictMode>
     <ToastProvider>
-      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+      {clientId ? (
+        <GoogleOAuthProvider clientId={clientId}>
+          <App />
+        </GoogleOAuthProvider>
+      ) : (
         <App />
-      </GoogleOAuthProvider>
+      )}
     </ToastProvider>
   </React.StrictMode>
 );
