@@ -2,6 +2,8 @@ import React, { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 import { useToast } from "../../../components/Popups/Popup";
+import { GoogleLogin } from "@react-oauth/google";
+import {jwtDecode} from "jwt-decode";
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -34,6 +36,36 @@ export default function Login({ onLogin }) {
         localStorage.removeItem("expertSession");
         if(localStorage.getItem("token")){ navigate("/dashboard");}
   },[navigate]);
+
+  const handleSuccess = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+
+    // Optionally decode on frontend
+    const userInfo = jwtDecode(token);
+    console.log("Google user:", userInfo);
+
+    // Send token to backend
+    const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    const data = await res.json();
+    console.log("Backend response:", data);
+    if (data.success) {
+        showToast("🎉 Login successful! ",data.success);
+        onLogin(data.token);
+        navigate("/dashboard");
+    } else {
+      showToast(data.message || "Login failed.");
+    }
+  };
+
+  const handleError = () => {
+    console.log("Login Failed");
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -62,11 +94,13 @@ export default function Login({ onLogin }) {
           />
 
           <button type="submit" className="login-btn">Login</button>
-
+          <div style={{ filter: "hue-rotate(95deg) saturate(1)" }}>
+            <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+          </div>
           <p className="register-link">
             Don’t have an account? <Link to="/register">Register</Link>
+            <p className="forgot-link"><Link to="/forgot-password">Forgot Password?</Link></p>
           </p>
-          <p className="forgot-link"><Link to="/forgot-password">Forgot Password?</Link></p>
         </form>
       </div>
     </div>

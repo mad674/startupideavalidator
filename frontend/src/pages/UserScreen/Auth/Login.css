@@ -14,7 +14,9 @@
   padding: var(--space-xl);
   /* background: linear-gradient(135deg, var(--bg-main), rgba(59, 130, 246, 0.1)); */
 }
-
+.forgot-link{
+  font-size: small;
+}
 .login-card {
   background: var(--bg-card);
   padding: var(--space-xl) var(--space-lg);
