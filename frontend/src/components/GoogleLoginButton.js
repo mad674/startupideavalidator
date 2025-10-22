@@ -11,7 +11,7 @@ const GoogleLoginButton = ({ onSuccess, onError }) => {
     }
 
     window.google.accounts.id.initialize({
-      client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+      client_id: "200813946279-v05eo3bae8nlc3nu7qa4lhui1lm8avid.apps.googleusercontent.com",
       callback: onSuccess,
     });
 
