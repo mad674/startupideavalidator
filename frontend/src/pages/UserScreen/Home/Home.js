@@ -54,14 +54,14 @@ export default function Home() {
               Login
             </Link>
           </div><br /><br /><br />
-            Are you an expert?  
+            Are you an expert?   
             <Link to="/expert/login">
-               Login
+              {" "}Login
             </Link>
             <br /><br />
             Join our community of Experts 
             <Link to="/expert/register"> 
-               Join Now
+              {" "} Join Now
             </Link>
         </div>
         

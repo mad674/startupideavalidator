@@ -36,8 +36,7 @@ import ExpertProfile from "./pages/UserScreen/ExpertProfile/ExpertProfile";
 import AdminExpertDashboard   from "./pages/AdminScreen/AdminExpertDashboard ";
 import ExpertForgotPassword from "./pages/ExpertScreen/Auth/ExpertForgotPassword";
 import ExpertResetPassword from "./pages/ExpertScreen/Auth/ExpertResetPassword";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();

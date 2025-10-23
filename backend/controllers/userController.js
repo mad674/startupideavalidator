@@ -5,10 +5,11 @@ const Idea = require('../models/Idea');
 const { encryptApiKey, decryptApiKey } = require('../utils/encrypt');
 const dotenv = require('dotenv');
 const nodemailer=require("nodemailer");
-const { OAuth2Client } = require('google-auth-library');
+// const { OAuth2Client } = require('google-auth-library');
+const { oauth2Client } = require('../middleware/googleconfig');
 
 dotenv.config();
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -102,14 +103,20 @@ const login = async (req, res, next) => {
 };
 
 const GoogleLogin = async (req, res, next) => {
-  const { token } = req.body;
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    const { code } = req.body; 
+    const googleres = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(googleres.tokens);
+
+    const userdata = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${googleres.tokens.access_token}`
+        }
     });
-    const payload = ticket.getPayload();
-    const { email} = payload;
+    const userDataJson = await userdata.json();
+        // console.log("userde",userDataJson);
+    const { email} = userDataJson;
     // find or create user
     let user = await User.findOne({ email });
     if (!user) {
@@ -122,7 +129,7 @@ const GoogleLogin = async (req, res, next) => {
       success: true,
       message: 'Login successful',
       token : appToken,
-      user: { name: user.name, email: user.email }
+      user: { email: user.email }
     });
   } catch (err) {
     console.error(err);

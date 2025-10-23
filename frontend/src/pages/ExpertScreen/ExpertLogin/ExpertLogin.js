@@ -2,8 +2,9 @@ import React, { useState,useEffect } from "react";
 import "./ExpertLogin.css";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../components/Popups/Popup";
-import GoogleLoginButton from "../../../components/GoogleLoginButton";
+// import GoogleLoginButton from "../../../components/GoogleLoginButton";
 // import {jwtDecode} from "jwt-decode";
+import { useGoogleLogin } from '@react-oauth/google';
 
 const ExpertLogin = ({onLogin}) => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -40,34 +41,39 @@ const ExpertLogin = ({onLogin}) => {
       if(localStorage.getItem("expertSession")){navigate("/expert/dashboard");}
     },[navigate]);
 
-  const handleSuccess = async (credentialResponse) => {
-      const token = credentialResponse.credential;
-  
-      // Optionally decode on frontend
-      // const userInfo = jwtDecode(token);
-      // console.log("Google user:", userInfo);
-  
-      // Send token to backend
-      const res = await fetch(`${process.env.REACT_APP_BACKEND}/expert/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-  
-      const data = await res.json();
-      // console.log("Backend response:", data);
-      if (data.success) {
+   const responseGoogle = async (res) => {
+    // console.log(res);
+    try {
+      if (res['code']) {
+        const resp = await fetch(`${process.env.REACT_APP_BACKEND}/expert/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: res['code'] }),
+        });
+        if (!resp.ok) {
+          throw new Error('Failed to authenticate with Google');
+        }
+        const data = await resp.json();
+        if (data.success) {
         onLogin({ expertId: data.expert.id, token:  `Bearer ${data.token }`});
         showToast(data.message,data.success);
         navigate(`/expert/dashboard`);
-      } else {
-        showToast(data.message || "Login failed");
+        } else {
+          showToast(data.message || "Login failed");
+        }
       }
-    };
-  
-  const handleError = () => {
-    console.log("Login Failed");
+    } catch (err) {
+      showToast("NO Expert Found");
+      console.error('Error during Google login:', err);
+    }
   };
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: 'auth-code',
+  });
   return (
     <div className="expert-login">
       <h2>Expert Login</h2>
@@ -81,9 +87,12 @@ const ExpertLogin = ({onLogin}) => {
           style={{padding:'12px',borderRadius:'8px',border:'1px solid #bbb',fontSize:'1rem'}}
         />
         <button type="submit" style={{padding:'12px',borderRadius:'8px',border:'none',background:'linear-gradient(90deg,#2196f3,#21cbf3)',color:'#fff',fontWeight:600,fontSize:'1rem',cursor:'pointer',boxShadow:'0 2px 8px rgba(33,150,243,0.12)',transition:'background 0.2s'}}>Login</button>
-        <div style={{ filter: "hue-rotate(95deg) saturate(1)" }}>
-          <GoogleLoginButton onSuccess={handleSuccess} onError={handleError} />
-        </div>
+        <div className="g-signin-button" onClick={googleLogin}>
+            <div className="content-wrapper">
+              <img className="google-logo" src="/glogo.png" alt="google" />
+              <span className="button-text">Sign in with Google</span>
+            </div>
+          </div>
         </form>
       Don’t have an account? <a href="/expert/register" style={{color:'#2196f3',textDecoration:'none',fontWeight:600}}>Register here</a>
       <br /><a href="/expert/forgot-password" style={{color:'#2196f3',textDecoration:'none',fontWeight:600}}>ForgotPassword </a>

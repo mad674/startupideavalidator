@@ -4,10 +4,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const dotenv=require('dotenv');
 const nodemailer = require("nodemailer");
-const { OAuth2Client } = require('google-auth-library');
+// const { OAuth2Client } = require('google-auth-library');
+const { oauth2Client } = require('../middleware/googleconfig');
 
 dotenv.config();
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -90,18 +91,23 @@ const login = async (req, res, next) => {
 };
 
 const GoogleLogin = async (req, res, next) => {
-  const { token } = req.body;
+  // const { token } = req.body;
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    const { code } = req.body; 
+    const googleres = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(googleres.tokens);
+
+    const userdata = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${googleres.tokens.access_token}`
+        }
     });
-    const payload = ticket.getPayload();
-    const { email} = payload;
-    // find or create user
+    const userDataJson = await userdata.json();
+    const { email} = userDataJson;
     let expert = await Expert.findOne({ email });
     if (!expert) {
-      res.status(400).json({ success: false, message: "Expert not found" });
+      res.status(200).json({ success: false, message: "Expert not found" });
       return;
     }
     // generate your own app JWT
@@ -109,11 +115,11 @@ const GoogleLogin = async (req, res, next) => {
             expiresIn: process.env.JWT_EXPIRE || '1d'
         });
     res.status(200).json({
-            success: true,
-            message: 'Login successful',
-            token: appToken,
-            expert: { id: expert._id, name: expert.name, email: expert.email }
-        });
+        success: true,
+        message: 'Login successful',
+        token: appToken,
+        expert: { id: expert._id, name: expert.name, email: expert.email }
+    });
   } catch (err) {
     console.error(err);
     res.status(401).json({ success: false, message: "Invalid Google token" });

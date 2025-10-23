@@ -2,8 +2,9 @@ import React, { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 import { useToast } from "../../../components/Popups/Popup";
-import GoogleLoginButton from "../../../components/GoogleLoginButton";
+// import GoogleLoginButton from "../../../components/GoogleLoginButton";
  // import {jwtDecode} from "jwt-decode";
+import { useGoogleLogin } from '@react-oauth/google';
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
@@ -33,40 +34,43 @@ export default function Login({ onLogin }) {
     }
   };
   useEffect(()=>{
-
         localStorage.removeItem("adminSession");
         localStorage.removeItem("expertSession");
         if(localStorage.getItem("token")){ navigate("/dashboard");}
   },[navigate]);
 
-  const handleSuccess = async (credentialResponse) => {
-    const token = credentialResponse.credential;
-
-    // Optionally decode on frontend
-    // const userInfo = jwtDecode(token);
-    // console.log("Google user:", userInfo);
-
-    // Send token to backend
-    const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-
-    const data = await res.json();
-    // console.log("Backend response:", data);
-    if (data.success) {
-        showToast("🎉 Login successful! ",data.success);
-        onLogin(data.token);
-        navigate("/dashboard");
-    } else {
-      showToast(data.message || "Login failed.");
+  const responseGoogle = async (res) => {
+    // console.log(res);
+    try {
+      if (res['code']) {
+        const resp = await fetch(`${process.env.REACT_APP_BACKEND}/user/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: res['code'] }),
+        });
+        if (!resp.ok) {
+          throw new Error('Failed to authenticate with Google');
+        }
+        const data = await resp.json();
+        if (data.success) {
+          showToast("🎉 Login successful! ",data.success);
+          onLogin(data.token);
+          navigate("/dashboard");
+        } else {
+          showToast(data.message || "Login failed.");
+        }
+      }
+    } catch (err) {
+      console.error('Error during Google login:', err);
     }
   };
-
-  const handleError = () => {
-    console.log("Login Failed");
-  };
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: 'auth-code',
+  });
 
   return (
     <div className="login-container">
@@ -96,10 +100,15 @@ export default function Login({ onLogin }) {
           />
 
           <button type="submit" className="login-btn">Login</button>
-          <div style={{ filter: "hue-rotate(95deg) saturate(1)" }}>
-            <GoogleLoginButton onSuccess={handleSuccess} onError={handleError} />
+          <div className="g-signin-button" onClick={googleLogin}>
+            <div className="content-wrapper">
+              <img className="google-logo" src="/glogo.png" alt="google" />
+              <span className="button-text">Sign in with Google</span>
+            </div>
           </div>
-        </form>
+          </form>
+          <p class="register-link">Don’t have an account? <a href="/register">Register</a></p>
+          <p class="forgot-link"><a href="/forgot-password">Forgot Password?</a></p>
         </div>
       </div>
   );
