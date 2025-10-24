@@ -1,6 +1,7 @@
 const Idea = require('../models/Idea');
 // const { calculateScore } = require('../utils/scoring');
 const User = require('../models/User');
+const Expert = require('../models/Expert');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 // const { get } = require('mongoose');
@@ -315,6 +316,40 @@ const getIdeaById = async (req, res, next) => {
   }
 };
 
+const getexpertchats=async(req, res, next)=> {
+    try {
+        const idea = await Idea.findById(req.params.ideaid);
+        if (!idea) {
+            return res.status(404).json({ message: 'Idea not found' });
+        }
+        let allexpertchats = [];
+        for (let i = 0; i < idea.experts.length; i++) {
+            const expertId = idea.experts[i]; // extract expert ID
+            const expert = await Expert.findById(expertId);
+
+            if (expert) {
+                const chatData = expert.ideas.find(
+                    (e) => e.ideaid.toString() === idea._id.toString()
+                );
+
+                allexpertchats.push({
+                    expert_id: expert._id,
+                    email: expert.email,
+                    expertise: expert.expertise,
+                    bio: expert.bio,
+                    name: expert.name,
+                    chat: chatData || null
+                });
+            }
+        }
+       
+        res.status(200).json({success: true, expertchats: allexpertchats });
+    } catch (err) {
+        console.error('Error in getexpertchat:', err);
+        next(err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }   
+};
 
 const getAllUserIdeas = async (req, res, next) => {
     try {
@@ -411,4 +446,4 @@ const getAllIdeas = async (req, res, next) => {
     }
 };
 
-module.exports = {updateidea, getAllIdeas,submitIdea, getIdeaById, getAllUserIdeas, getsuggestions,getfeedback, deleteIdea, deleteAllUserIdeas };
+module.exports = {getexpertchats,updateidea, getAllIdeas,submitIdea, getIdeaById, getAllUserIdeas, getsuggestions,getfeedback, deleteIdea, deleteAllUserIdeas };

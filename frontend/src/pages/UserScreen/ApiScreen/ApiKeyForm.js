@@ -20,7 +20,7 @@ export default function ApiKeyForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/";
-
+  const [showInstructions, setShowInstructions] = useState(false);
   const token = localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
 
@@ -105,7 +105,41 @@ export default function ApiKeyForm() {
         <p className="api-desc">
           Select a provider, choose a model, and paste your API key below. Your keys are securely stored and never shared.
         </p>
+        <div className="instructions-container">
+          <button
+            type="button"
+            onClick={() => setShowInstructions(!showInstructions)}
+            className="instructions-toggle"
+          >
+            {showInstructions ? "🔽 Hide Instructions" : "ℹ️ Show Instructions"}
+          </button>
 
+          {showInstructions && (
+            <div className="api-instructions">
+              <h3 className="instructions-title">What is an API Key?</h3>
+              <p>
+                An <strong>API key</strong> is like a digital pass that allows
+                this app to connect to AI services such as{" "}
+                <em>OpenAI</em>.
+              </p>
+              <p>
+                You need to enter it so the app can generate answers, summaries,
+                or validate ideas using your selected AI model.
+              </p>
+              <ol className="instruction-steps">
+                <li>1️⃣ Choose your <strong>provider</strong> (e.g., OpenAI).</li>
+                <li>2️⃣ Click the link below (<strong>Get your key</strong>).</li>
+                <li>3️⃣ Copy your key.</li>
+                <li>4️⃣ Paste it into the box below.</li>
+                <li>✅ Click <strong>Verify & Save</strong>.</li>
+              </ol>
+              <p className="instructions-note">
+                🔒 Your key is stored securely and used only for your requests.
+              </p>
+            </div>
+          )}
+        </div>
+        <br />
         {error && <div className="api-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="api-form">
@@ -173,7 +207,7 @@ export default function ApiKeyForm() {
             </div>
           </label>
 
-          <p className="api-info">
+          <p className="api-inf">
             👉 Get your <span className="font-semibold">{provider}</span> key{" "}
             <a href={providerLinks[provider]} target="_blank" rel="noreferrer" className="api-link">
               here

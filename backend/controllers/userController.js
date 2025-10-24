@@ -239,7 +239,7 @@ const setApiKey = async (req, res, next) => {
       provider_url:provider_url,
       temperature:temperature,
     }
-    console.log("Storing API details:", api);
+    // console.log("Storing API details:", api);
     // validate new key
     const isValid = await validateApiKey(encryptApiKey(apikey),provider_name,model_name);
     if (!isValid) {
