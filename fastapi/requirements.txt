@@ -1,7 +1,8 @@
 fastapi
 uvicorn
-langchain
-langchain-openai
+langchain==0.2.14
+langchain-community==0.2.12
+langchain-openai==0.1.15
 openai
 sentence-transformers
 python-multipart
@@ -12,5 +13,4 @@ pinecone
 crypto
 pycryptodome
 python-dotenv
-langchain-community
 websockets
