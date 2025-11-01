@@ -10,7 +10,7 @@ import fireworksLogo from "../../../assets/fireworks.png";
 import mistralLogo from "../../../assets/mistral.png";
 
 export default function ApiKeyForm() {
-  const [apiKey, setApiKey] = useState("default");
+  const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showKey, setShowKey] = useState(false);
@@ -66,22 +66,8 @@ export default function ApiKeyForm() {
     e.preventDefault();
     setError(null);
 
-    if (!userId || !token) return setError("Not authenticated. Please log in again.");
-    
-    if(apiKey === "default") {
-      if(provider === "groq") {
-        setApiKey(process.env.REACT_APP_GROQ_API_KEY);
-      }else if(provider === "openai") {
-        setApiKey(process.env.REACT_APP_OPENAI_API_KEY);
-      }else if(provider === "fireworks") {
-        setApiKey(process.env.REACT_APP_FIREWORKS_API_KEY);
-      }else if(provider === "mistral") {
-        setApiKey(process.env.REACT_APP_MISTRAL_API_KEY);
-      }else {
-        return setError("Default API key is NOT available. Please enter your own key.");
-      }
-    }
     if (!apiKey.trim()) return setError("API key is required");
+    if (!userId || !token) return setError("Not authenticated. Please log in again.");
     setLoading(true);
     try {
       const res = await fetch(`${process.env.REACT_APP_BACKEND}/user/save_api_key/${userId}`, {
@@ -217,7 +203,7 @@ export default function ApiKeyForm() {
               <button type="button" onClick={() => setShowKey(!showKey)} className="show-btn">
                 {showKey ? "Hide" : "Show"}
               </button>
-            </div><small>Type default to use default key or Enter your own (sk-...)</small>
+            </div>
           </label>
 
           <p className="api-inf">
