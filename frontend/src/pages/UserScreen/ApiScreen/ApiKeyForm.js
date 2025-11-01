@@ -14,7 +14,7 @@ export default function ApiKeyForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState("groq");
+  const [provider, setProvider] = useState("openai");
   const [model, setModel] = useState("");
   const [temperature, setTemperature] = useState(0.6);
   const navigate = useNavigate();
@@ -25,8 +25,8 @@ export default function ApiKeyForm() {
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
 
   const providerModels = {
-    groq: ["llama-3.1-8b-instant","llama-3.1-70b-versatile","llama-3.3-70b-versatile","openai/gpt-oss-20b","openai/gpt-oss-120b","llama3-groq-70b-8192-tool-use-preview"],
     openai: ["gpt-4o-mini","o4-mini","gpt-4o","gpt-3.5-turbo","gpt-oss-20b"],
+    groq: ["llama-3.1-8b-instant","llama-3.1-70b-versatile","llama-3.3-70b-versatile","openai/gpt-oss-20b","openai/gpt-oss-120b","llama3-groq-70b-8192-tool-use-preview"],
     together: ["togethercomputer/llama-2-70b-chat","togethercomputer/mixtral-8x7b-instruct","togethercomputer/llama-3.2-11b-free"],
     fireworks: ["accounts/fireworks/models/qwen2p5-vl-7b-instruct","accounts/fireworks/models/deepseek-r1","accounts/fireworks/models/gpt-oss-20b","accounts/fireworks/models/qwen3-1p7b-fp8-draft-131072","accounts/fireworks/models/llama-v3p1-405b-instruct","accounts/fireworks/models/llama-v3p1-8b-instruct","accounts/fireworks/models/mixtral-8x7b-instruct"],
     mistral: ["open-mistral-7b","mistral-large","mistral-medium","mistral-small"],
