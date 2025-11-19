@@ -124,6 +124,8 @@ export default function ApiKeyForm() {
               <p>
                 You need to enter it so the app can generate answers, summaries,
                 or validate ideas using your selected AI model.
+                temperature settings help control the creativity of the AI responses.
+                set it to 0 for more focused answers, or higher values for more creative outputs.
               </p>
               <ol className="instruction-steps">
                 <li>1️⃣ Choose your <strong>provider</strong> (e.g., OpenAI).</li>
