@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
 export default function Navbar({ onLogout }) {
+  const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,7 +61,13 @@ export default function Navbar({ onLogout }) {
             src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
             alt="Profile"
             className="profile-avatar"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => {
+              if (location.pathname === "/profile") {
+                navigate("/dashboard");
+              } else {
+                navigate("/profile");
+              }
+            }}//{() => setDropdownOpen(!dropdownOpen)}
             aria-haspopup="true"
             aria-expanded={dropdownOpen}
           />
