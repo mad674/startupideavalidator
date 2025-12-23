@@ -3,47 +3,45 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  register,
-  login,
-  getExpert,
-  getchat,
-  deleteMessage,
-  updateProfile,
-  getoneExpert,
-  disconnectidea,
-  ChatMessage,
-  connectidea,
-  getAllIdeas,
-  getallExperts,
-  updatePassword,
-  deleteExpert,
-  ForgotPassword,
-  ResetPasswordOtp,
-  GoogleLogin
+    ExpertRegister,
+    ExpertLogin,
+    ExpertGoogleLogin,
+    GetExpert,
+    Connectidea,
+    UpdateProfile,
+    GetoneExpert,
+    Disconnectidea,
+    DeleteMessage,
+    ChatMessage,
+    Getchat,
+    GetAllIdeas,
+    GetallExperts,
+    UpdatePassword,
+    DeleteExpert,
+    ForgotPassword,
+    ResetPasswordOtp
+}= require("../controllers/expertController");
 
-} = require("../controllers/expertController");
 
-
-router.post("/register", register);
-router.post("/login", login);
-router.post("/google", GoogleLogin);
-router.post("/connect/:expertId", connectidea);
+router.post("/register", ExpertRegister.register);
+router.post("/login", ExpertLogin.login);
+router.post("/google", ExpertGoogleLogin.GoogleLogin);
+router.post("/connect/:expertId", Connectidea.connectidea);
 router.post("/sendmsg/:expertId", ChatMessage);
-router.post("/deleteMessage/:expertId", deleteMessage);
+router.post("/deleteMessage/:expertId", DeleteMessage.deleteMessage);
 router.post("/forgot-password", ForgotPassword);
 router.post("/reset-password-otp", ResetPasswordOtp);
 
-router.get("/all", getallExperts);
-router.get("/getexpert/:ideaId", getExpert);
-router.get("/getoneexpert/:expertId", getoneExpert);
-router.get("/getchat/:expertId/:ideaId", getchat);
-router.get("/getideas/:expertId", getAllIdeas);
+router.get("/all", GetallExperts.getallExperts);
+router.get("/getexpert/:ideaId", GetExpert.getExpert);
+router.get("/getoneexpert/:expertId", GetoneExpert.getoneExpert);
+router.get("/getchat/:expertId/:ideaId", Getchat.getchat);
+router.get("/getideas/:expertId", GetAllIdeas.getAllIdeas);
 
-router.put("/updateprofile/:expertId", updateProfile);
-router.put("/changepassword/:expertId", updatePassword);
+router.put("/updateprofile/:expertId", UpdateProfile.updateProfile);
+router.put("/changepassword/:expertId", UpdatePassword.updatePassword);
 
-
-router.delete("/disconnect/:ideaId/:expertId", disconnectidea);
-router.delete("/delete/:expertId", deleteExpert);
+router.delete("/disconnect/:ideaId/:expertId", Disconnectidea.disconnectidea);  
+router.delete("/delete/:expertId", DeleteExpert.deleteExpert);
 
 module.exports = router;

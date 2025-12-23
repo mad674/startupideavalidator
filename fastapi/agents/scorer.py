@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
-from utils.encrypt import decrypt_api_key
+from utils.encrypt import Decryptor
 import os
 
 prompt_template = PromptTemplate.from_template("""
@@ -38,17 +38,22 @@ Startup Idea:
 {structured_idea}
 """)
 
-
+Decryptor=Decryptor()
 # scorer_chain = prompt_template | llm
 
-def score_idea(api,structured_idea):
-    llm = ChatOpenAI(
-        model=api["model_name"], 
-        temperature=api["temperature"],
-        openai_api_key=decrypt_api_key(api["apikey"]),
-        openai_api_base=api["provider_url"],
-    )
-    scorer_chain = prompt_template | llm
-    return scorer_chain.invoke({"structured_idea": structured_idea}).content
+class ScorerAgent:
+    def __init__(self, api):
+        self.llm = ChatOpenAI(
+            model=api["model_name"], 
+            temperature=api["temperature"],
+            openai_api_key=Decryptor.decrypt_api_key(api["apikey"]),
+            openai_api_base=api["provider_url"],
+        )
+        self.scorer_chain = prompt_template | self.llm
+
+    def score_idea(self, structured_idea: str):
+        return self.scorer_chain.invoke({
+            "structured_idea": structured_idea
+        }).content
 
 

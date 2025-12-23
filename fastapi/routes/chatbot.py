@@ -1,6 +1,6 @@
 # chatbot.py
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from memory.memory_store import MemoryStore
+from memory.memory_store import MemoryUtils,MemoryDelete,MemoryGet,MemoryUpdate,MemoryStore
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.tools import Tool
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -15,15 +15,20 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os, json, asyncio, httpx, traceback
-from utils.encrypt import decrypt_api_key
+from utils.encrypt import Decryptor
 from langchain_openai import ChatOpenAI
 import requests 
 
 load_dotenv()
 
 router = APIRouter()
-memory = MemoryStore()
-
+# Memory=Memory()
+memory_utils=MemoryUtils()
+memory_store=MemoryStore()
+memory_get=MemoryGet()
+memory_update=MemoryUpdate()
+memory_delete=MemoryDelete()
+decryptor=Decryptor()
 # -----------------------------
 # Health check endpoint for monitoring
 # -----------------------------
@@ -52,7 +57,7 @@ def chunk_text_by_words(text: str, words_per_chunk: int = STREAM_CHUNK_WORDS):
 def fetch_idea_from_db(user_id: str, idea_id: str) -> dict:
     """Retrieve the structured part of the idea from memory/db."""
     try:
-        idea = memory.get_idea(user_id, idea_id) or {}
+        idea = memory_get.get_idea(user_id, idea_id) or {}
         return idea.get("structured", {})  # Always return a dict, never None
     except Exception as e:
         print(f"Error fetching idea: {e}")
@@ -74,7 +79,7 @@ def format_idea_context(idea: dict) -> str:
 def _impl_retrieve_idea(user_id: str, idea_id: str) -> str:
     """Return the full idea as JSON string."""
     try:
-        idea = memory.get_idea(user_id, idea_id)
+        idea = memory_get.get_idea(user_id, idea_id)
         if not idea:
             return "{}"
 
@@ -93,7 +98,7 @@ def _impl_retrieve_idea(user_id: str, idea_id: str) -> str:
 def _impl_summarize_history(user_id: str, idea_id: str) -> str:
     """Summarize the last 20 chat messages for the idea."""
     try:
-        idea = memory.get_idea(user_id, idea_id)
+        idea = memory_get.get_idea(user_id, idea_id)
         history = idea.get("chat_history", []) if idea else []
         if not history:
             return "No chat history yet."
@@ -109,12 +114,12 @@ def _impl_summarize_history(user_id: str, idea_id: str) -> str:
 def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_token: str = "") -> str:
     """Update the idea locally and in backend, with error handling."""
     try:
-        idea = memory.get_idea(user_id, idea_id)
+        idea = memory_get.get_idea(user_id, idea_id)
         if not idea:
             return "⚠️ Idea not found."
         current_structured = idea.get("structured", {}) or {}
         current_structured.update(updated_fields)
-        memory.update_idea(user_id=user_id, idea_id=idea_id, updated_fields=current_structured)
+        memory_update.update_idea(user_id=user_id, idea_id=idea_id, updated_fields=current_structured)
 
         backend_url = os.getenv("BACKEND_URL")
         if backend_url:
@@ -396,7 +401,7 @@ async def chat_endpoint(websocket: WebSocket):
             llm = ChatOpenAI(
                 model=api["model_name"], 
                 temperature=api["temperature"],
-                openai_api_key=decrypt_api_key(api["apikey"] or os.getenv("OPENAI_API_KEY")),
+                openai_api_key=decryptor.decrypt_api_key(api["apikey"] or os.getenv("OPENAI_API_KEY")),
                 openai_api_base=api["provider_url"],
             )
             key = f"{user_id}_{idea_id}"
@@ -433,7 +438,7 @@ async def chat_endpoint(websocket: WebSocket):
                     await asyncio.sleep(STREAM_CHUNK_DELAY)
                 await websocket.send_json({"response": final_response, "type": "final"})
                 # Save to memory
-                memory.update_idea(
+                memory_update.update_idea(
                     user_id=user_id,
                     idea_id=idea_id,
                     append_chat=[
@@ -487,7 +492,7 @@ async def chat_endpoint(websocket: WebSocket):
             await websocket.send_json({"response": final_response, "type": "final"})
 
             # Save to memory
-            memory.update_idea(
+            memory_update.update_idea(
                 user_id=user_id,
                 idea_id=idea_id,
                 append_chat=[

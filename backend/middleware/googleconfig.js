@@ -1,6 +1,21 @@
-const {google}=require('googleapis');
+const { google } = require('googleapis');
+const dotenv = require('dotenv');
+dotenv.config();
 
-const GOOGLE_CLIENT_ID=process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET=process.env.GOOGLE_CLIENT_SECRET;
+class GoogleConfig {
+    constructor() {
+        this.clientId = process.env.GOOGLE_CLIENT_ID;
+        this.clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    }
 
-exports.oauth2Client=new google.auth.OAuth2(GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,'postmessage');
+    initialize() {
+        return new google.auth.OAuth2(
+            this.clientId,
+            this.clientSecret,
+            'postmessage'
+        );
+    }
+}
+
+
+module.exports=GoogleConfig;

@@ -24,7 +24,7 @@ def safe_json_load(data, default=None):
             return default if default is not None else {}
     return data  # already dict or list
 
-class MemoryStore:
+class Memory:
     def __init__(self):
         self.client = Pinecone(api_key=PINECONE_API_KEY)
         
@@ -41,6 +41,10 @@ class MemoryStore:
         self.store = {}  # In-memory store
         model_path ="all-MiniLM-L6-v2"# os.path.join(os.path.dirname(__file__), "models", "all-MiniLM-L6-v2")
         self.embedder = SentenceTransformer(model_path)
+    
+class MemoryUtils(Memory):
+    def __init__(self):
+        super().__init__()    
     # Serialize metadata (dict/list -> JSON)
     def _serialize_metadata(self, meta_dict):
         serialized = {}
@@ -63,6 +67,24 @@ class MemoryStore:
                 metadata["structured"] = {"problem_statement": metadata["structured"].get("problem_statement","")}
         return metadata
 
+    def _update_metadata(self, idea_id, update_fn):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
+            update_fn(meta)
+            meta["timestamp"] = datetime.now().isoformat()
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
+            )
+            return True
+        except Exception as e:
+            print(f"[ERROR] _update_metadata failed: {e}")
+            return False
+
     # Deserialize metadata
     def _deserialize_metadata(self, meta_dict):
         deserialized = {}
@@ -73,6 +95,9 @@ class MemoryStore:
                 deserialized[k] = v
         return deserialized
 
+class MemoryStore(Memory):
+    def __init__(self):
+        super().__init__()
     # ------------------ Store a new idea ------------------
     def store_idea(self, user_id, idea_id, idea_text, idea_name, scores,
                feedbacks=None, suggestions=None, chat_history=None):
@@ -122,6 +147,9 @@ class MemoryStore:
             print(f"[ERROR] store_idea failed: {e}")
             return False
 
+class MemoryGet(Memory):
+    def __init__(self):
+        super().__init__()
     # ------------------ Get all ideas for a user ------------------
     def get_all_ideas(self, user_id):
         try:
@@ -151,83 +179,6 @@ class MemoryStore:
         except Exception as e:
             print(f"[ERROR] get_all_ideas failed: {e}")
             return []
-
-    # ------------------ Generic update metadata ------------------
-    def _update_metadata(self, idea_id, update_fn):
-        try:
-            result = self.index.fetch(ids=[idea_id])
-            if idea_id not in result.vectors:
-                return False
-            vec = result.vectors[idea_id]
-            meta = vec.metadata
-            update_fn(meta)
-            meta["timestamp"] = datetime.now().isoformat()
-
-            self.index.upsert(
-                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
-            )
-            return True
-        except Exception as e:
-            print(f"[ERROR] _update_metadata failed: {e}")
-            return False
-    # ------------------ Update feedback ------------------
-    def update_feedback(self, user_id, idea_id, feedback):
-        try:
-            result = self.index.fetch(ids=[idea_id])
-            if idea_id not in result.vectors:
-                return False
-            vec = result.vectors[idea_id]
-            meta = vec.metadata
-
-            meta["feedbacks"] = json.dumps(feedback)
-            meta["timestamp"] = datetime.now().isoformat()
-
-            self.index.upsert(
-                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
-            )
-            return True
-        except Exception as e:
-            print(f"[ERROR] update_feedback failed: {e}")
-            return False
-    # ------------------ Update suggestions ------------------
-    def update_suggestions(self, user_id, idea_id, suggestions):
-        try:
-            result = self.index.fetch(ids=[idea_id])
-            if idea_id not in result.vectors:
-                return False
-            vec = result.vectors[idea_id]
-            meta = vec.metadata
-
-            meta["suggestions"] = json.dumps(suggestions)
-            meta["timestamp"] = datetime.now().isoformat()
-
-            self.index.upsert(
-                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
-            )
-            return True
-        except Exception as e:
-            print(f"[ERROR] update_suggestions failed: {e}")
-            return False
-        # ------------------ Update scores ------------------
-    def update_scores(self, user_id, idea_id, scores):
-        return self._update_metadata(
-            idea_id,
-            lambda m: m.update({"scores": json.dumps(scores)})
-        )
-
-    # ------------------ Delete an idea ------------------
-    def delete_idea(self, user_id, idea_id):
-        try:
-            self.index.delete(ids=[idea_id])
-            if user_id in self.store and idea_id in self.store[user_id]:
-                del self.store[user_id][idea_id]
-                if not self.store[user_id]:
-                    del self.store[user_id]
-
-            return True
-        except Exception as e:
-            print(f"[ERROR] delete_idea failed: {e}")
-            return False
 
     def get_idea(self, user_id, idea_id):
         try:
@@ -329,7 +280,56 @@ class MemoryStore:
             print(f"[ERROR] get_ideas failed: {e}")
             return {}
 
+class MemoryUpdate(Memory):
+    def __init__(self):
+        super().__init__()
+    # ------------------ Update feedback ------------------
+    def update_feedback(self, user_id, idea_id, feedback):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
+
+            meta["feedbacks"] = json.dumps(feedback)
+            meta["timestamp"] = datetime.now().isoformat()
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
+            )
+            return True
+        except Exception as e:
+            print(f"[ERROR] update_feedback failed: {e}")
+            return False
+    # ------------------ Update suggestions ------------------
+    def update_suggestions(self, user_id, idea_id, suggestions):
+        try:
+            result = self.index.fetch(ids=[idea_id])
+            if idea_id not in result.vectors:
+                return False
+            vec = result.vectors[idea_id]
+            meta = vec.metadata
+
+            meta["suggestions"] = json.dumps(suggestions)
+            meta["timestamp"] = datetime.now().isoformat()
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": vec.values, "metadata": meta}]
+            )
+            return True
+        except Exception as e:
+            print(f"[ERROR] update_suggestions failed: {e}")
+            return False
+        # ------------------ Update scores ------------------
+    def update_scores(self, user_id, idea_id, scores):
+        return self._update_metadata(
+            idea_id,
+            lambda m: m.update({"scores": json.dumps(scores)})
+        )
+
     def update_idea(self, user_id, idea_id, updated_fields=None, append_chat=None):
+        
         try:
             # Fetch idea (from local cache or Pinecone)
             idea = self.get_idea(user_id, idea_id)
@@ -411,3 +411,31 @@ class MemoryStore:
             print(f"[ERROR] update_idea failed: {e}")
             return False
 
+class MemoryDelete(Memory):
+    def __init__(self):
+        super().__init__()
+    # ------------------ Delete an idea ------------------
+    def delete_idea(self, user_id, idea_id):
+        try:
+            self.index.delete(ids=[idea_id])
+            if user_id in self.store and idea_id in self.store[user_id]:
+                del self.store[user_id][idea_id]
+                if not self.store[user_id]:
+                    del self.store[user_id]
+
+            return True
+        except Exception as e:
+            print(f"[ERROR] delete_idea failed: {e}")
+            return False
+
+        try:
+            self.index.delete(ids=[idea_id])
+            if user_id in self.store and idea_id in self.store[user_id]:
+                del self.store[user_id][idea_id]
+                if not self.store[user_id]:
+                    del self.store[user_id]
+
+            return True
+        except Exception as e:
+            print(f"[ERROR] delete_idea failed: {e}")
+            return False

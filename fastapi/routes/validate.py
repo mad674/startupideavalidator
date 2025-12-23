@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 # from agents.clarifier import clarify_idea
-from agents.scorer import score_idea
+# from agents.scorer import ScorerAgent
 # from agents.suggester import suggest_improvements
-from agents.validator import validate_idea
-from memory.memory_store import MemoryStore
+from agents.validator import ValidatorAgent
+# from memory.memory_store import MemoryStore
 import json
 router = APIRouter()
-memory = MemoryStore()
+# memory = MemoryStore()
+# ScorerAgent=ScorerAgent()
 
 class ValidateRequest(BaseModel):
     user_id: str
@@ -21,6 +22,8 @@ class ValidateRequest(BaseModel):
 
 @router.post("/validate")
 def validate(request: ValidateRequest):
+    
+    Validator_Agent = ValidatorAgent(request.api)
     data={
         "name": request.name if request.name else "No Idea Provided",
         "problem_statement": request.problem_statement if request.problem_statement else "No Problem Statement Provided",
@@ -29,7 +32,7 @@ def validate(request: ValidateRequest):
         "business_model": request.business_model if request.business_model else "No Business Model Provided",
         "team": request.team   if request.team else "No Team Provided",
     }
-    result=validate_idea(request.api,data)
+    result=Validator_Agent.validate_idea(data)
     # print("Validation result:", result)
     if "no" == result:
         return {

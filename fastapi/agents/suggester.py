@@ -1,7 +1,7 @@
 import json
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from utils.encrypt import decrypt_api_key
+from utils.encrypt import Decryptor
 
 prompt_template = PromptTemplate.from_template("""
 You are a startup coach. Based on the following scores and idea, suggest 2–3 improvements .
@@ -28,16 +28,20 @@ Scores:
 {scores}
 """)
 
-def suggest_improvements(api, structured_idea, scores):
-    llm = ChatOpenAI(
-        model=api["model_name"], 
-        temperature=api["temperature"],
-        openai_api_key=decrypt_api_key(api["apikey"]),
-        openai_api_base=api["provider_url"],
-    )
-    suggester_chain = prompt_template | llm
+Decryptor=Decryptor()
 
-    return suggester_chain.invoke({
-        "structured_idea": structured_idea,
-        "scores": scores
-    }).content
+class SuggesterAgent:
+    def __init__(self, api):
+        self.llm = ChatOpenAI(
+            model=api["model_name"], 
+            temperature=api["temperature"],
+            openai_api_key=Decryptor.decrypt_api_key(api["apikey"]),
+            openai_api_base=api["provider_url"],
+        )
+        self.suggester_chain = prompt_template | self.llm
+
+    def suggest_improvements(self, structured_idea: str, scores: str):
+        return self.suggester_chain.invoke({
+            "structured_idea": structured_idea,
+            "scores": scores
+        }).content

@@ -1,15 +1,16 @@
 # routes/pdf.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from utils.pdf_generator import generate_pdf
+from utils.pdf_generator import PDFGenerator
 from fastapi.responses import FileResponse
-from memory.memory_store import MemoryStore
+from memory.memory_store import MemoryGet
 import requests
 import json
 import os
 
 router = APIRouter()
-memory = MemoryStore()
+Memory_Get = MemoryGet()
+PDF_Generator=PDFGenerator()
 
 class PDFRequest(BaseModel):
     idea_id: str
@@ -20,7 +21,7 @@ class PDFRequest(BaseModel):
 def create_pdf(request: PDFRequest):
     try:
         # print("📩 Received PDF payload:", request)
-        idea_data = memory.get_idea(request.user_id, request.idea_id)
+        idea_data = Memory_Get.get_idea(request.user_id, request.idea_id)
         # print(idea_data)
         if not idea_data:
             raise HTTPException(status_code=404, detail="Idea not found")
@@ -35,7 +36,7 @@ def create_pdf(request: PDFRequest):
         except requests.exceptions.RequestException as e:
             print("Request failed:", e)
 
-        pdf_path =  generate_pdf(
+        pdf_path = PDF_Generator.generate_pdf(
             idea=idea_data['structured'].get('name', 'Unnamed Idea'),
             structured=idea_data.get('structured', {}),
             scores=idea_data.get('scores', {}),

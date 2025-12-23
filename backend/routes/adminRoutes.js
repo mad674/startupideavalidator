@@ -1,35 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const { getallideas,
-    getallexpects,
-    getalluserideas,
-    deleteidea, 
-    deletealluserideas,
-    getAllUsers,
-    deleteUserByAdmin,
-    deleteAllUsers,
-    deleteExpert,
-    deleteAllExpert,
-    adminlogin ,
-    changeAdminPassword,
-    deleteallideas } = require('../controllers/adminController');
+const { 
+    AdminLogin,
+    ChangeAdminPassword,
+    GetAllIdeas,
+    GetAllUsers,
+    GetAllUserIdeas,
+    DeleteIdea,
+    DeleteAllUserIdeas,
+    DeleteExpert,
+    DeleteAllIdeas,
+    DeleteUserByAdmin,
+    DeleteAllUsers,
+    GetAllExperts,
+    DeleteAllExpert
+}= require('../controllers/adminController');
 
 
-router.post('/deleteuser/:admin_id', deleteUserByAdmin);
-router.post('/adminlogin', adminlogin);
-router.post('/adminchangepassword', changeAdminPassword );
-router.post("/alluserideas/:admin_id", getalluserideas);
-router.post("/deleteidea/:admin_id", deleteidea);
-router.post("/deletealluserideas/:admin_id", deletealluserideas);
-router.post('/deleteExpert/:admin_id', deleteExpert);
+router.post('/deleteuser/:admin_id', DeleteUserByAdmin.deleteUserByAdmin);
+router.post('/adminlogin', AdminLogin.adminlogin);
+router.post('/adminchangepassword', ChangeAdminPassword.changeAdminPassword );
+router.post("/alluserideas/:admin_id", GetAllUserIdeas.getalluserideas);
+router.post("/deleteidea/:admin_id", DeleteIdea.deleteidea);
+router.post("/deletealluserideas/:admin_id", DeleteAllUserIdeas.deletealluserideas);
+router.post('/deleteExpert/:admin_id', DeleteExpert.deleteExpert);
 
-router.get('/allusers/:admin_id', getAllUsers);
-router.get('/allexperts/:admin_id', getallexpects);
-router.get("/allideas/:admin_id", getallideas);
+router.get('/allusers/:admin_id', GetAllUsers.getAllUsers);
+router.get('/allexperts/:admin_id', GetAllExperts.getallexpects);
+router.get("/allideas/:admin_id", GetAllIdeas.getallideas);
 
 
-router.delete('/deleteallideas/:admin_id',deleteallideas);
-router.delete('/deleteallusers/:admin_id', deleteAllUsers);
-router.delete('/deleteAllExpert/:admin_id', deleteAllExpert);
+router.delete('/deleteallideas/:admin_id',DeleteAllIdeas.deleteallideas);
+router.delete('/deleteallusers/:admin_id', DeleteAllUsers.deleteAllUsers);
+router.delete('/deleteAllExpert/:admin_id', DeleteAllExpert.deleteAllExpert);
 
 module.exports = router;

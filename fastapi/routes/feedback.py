@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from memory.memory_store import MemoryStore
-from agents.feedback import feedback_idea # or use RunnableChain
+from memory.memory_store import MemoryUpdate
+from agents.feedback import FeedbackAgent# or use RunnableChain
 # from langchain_core.messages import HumanMessage
 import json
 
 router = APIRouter()
-memory = MemoryStore()
+Memory_Update=MemoryUpdate()
+
 
 class ImproveRequest(BaseModel):
     user_id: str
@@ -18,11 +19,12 @@ class ImproveRequest(BaseModel):
 @router.post("/feedback")
 def getfeedback(req: ImproveRequest):
     try:
+        Feedback_Agent=FeedbackAgent(req.api)
         if not req.data or not req.scores:
             return {"success": False, "error": "Missing data or scores"}
 
-        feedback = feedback_idea(req.api, req.data, req.scores)
-        uf=memory.update_feedback(req.user_id, req.idea_id, feedback)
+        feedback = Feedback_Agent.feedback_idea(req.data, req.scores)
+        uf=Memory_Update.update_feedback(req.user_id, req.idea_id, feedback)
         if(uf==False):
             return {"success": False, "error": "Error in updating feedback in MemoryStore"}
         return {

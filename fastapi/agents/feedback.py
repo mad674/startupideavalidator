@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
-from utils.encrypt import decrypt_api_key
+from utils.encrypt import Decryptor
 import os
 
 prompt_template = """
@@ -29,20 +29,22 @@ Respond ONLY in valid JSON format:
 }}
 """
 
-
+Decryptor=Decryptor()
 feedback_prompt = PromptTemplate.from_template(prompt_template)
 # feedback_chain = feedback_prompt | llm
 
-def feedback_idea(api,structured_idea: str, scores: str):
-    llm = ChatOpenAI(
-        model=api["model_name"], 
-        temperature=api["temperature"],
-        openai_api_key=decrypt_api_key(api["apikey"]),
-        openai_api_base=api["provider_url"],
-    )
-    feedback_chain = feedback_prompt | llm
-    return feedback_chain.invoke({
-        "idea": structured_idea,
-        "scores": scores
-    }).content
-    
+class FeedbackAgent:
+    def __init__(self, api):
+        self.llm = ChatOpenAI(
+            model=api["model_name"], 
+            temperature=api["temperature"],
+            openai_api_key=Decryptor.decrypt_api_key(api["apikey"]),
+            openai_api_base=api["provider_url"],
+        )
+        self.feedback_chain = feedback_prompt | self.llm
+
+    def get_feedback(self, structured_idea: str, scores: str):
+        return self.feedback_chain.invoke({
+            "idea": structured_idea,
+            "scores": scores
+        }).content

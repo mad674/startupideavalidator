@@ -6,8 +6,8 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const expertRoutes = require('./routes/expertRoutes');
 
-const errorHandler  = require('./middleware/errorHandler');
-const connectDB = require('./config/db'); // DB connection file
+const ErrorHandler  = require('./middleware/errorHandler');
+const Mongodb = require('./config/db'); // DB connection file
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-connectDB();
+Mongodb.connectDB();
 
 app.get('/', (req, res) => {
     res.send('SIV BACKEND API is running...');
@@ -33,7 +33,7 @@ app.use('/user', userRoutes); // User routes are prefixed with '/user'
 app.use('/admin', adminRoutes); // Admin routes are prefixed with '/admin'
 app.use('/expert', expertRoutes); // Expert routes are prefixed with '/expert'
 // Error Handler Middleware
-app.use(errorHandler);
+app.use(ErrorHandler.errorHandler);
 
 // Port
 const PORT = process.env.PORT || 5000;

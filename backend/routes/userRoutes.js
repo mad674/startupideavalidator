@@ -1,21 +1,32 @@
 const express = require('express');
 const router = express.Router();
 
-const { GoogleLogin,ForgotPassword,ResetPasswordOtp,getuserapikey,checkApiKey,setApiKey,register, login, getUserDetails, updateUserDetails, deleteUser } = require('../controllers/userController');
+const { 
+    UserAuthentication,
+    UserRegister,
+    UserLogin,
+    UserDetails,
+    CheckApiKey,
+    DeleteUser,
+    PasswordReset,
+    ResetPassword,
+    SetApiKey,
+    GetUserApiKey,
+    updateUserDetails
+}= require('../controllers/userController');
 
-router.post("/check_api_key/:user_id", checkApiKey);
-router.post("/save_api_key/:user_id", setApiKey);
-router.post('/register', register);
-router.post('/login', login);
-router.post('/google', GoogleLogin);
-router.post("/forgot-password", ForgotPassword);
-router.post("/reset-password-otp", ResetPasswordOtp);
+router.post("/check_api_key/:user_id", CheckApiKey.checkApiKey);
+router.post("/save_api_key/:user_id", SetApiKey.setApiKey);
+router.post('/register', UserRegister.register);
+router.post('/login', UserLogin.login);
+router.post('/google', UserAuthentication.GoogleLogin);
+router.post("/forgot-password", PasswordReset.ForgotPassword);
+router.post("/reset-password-otp", ResetPassword.ResetPasswordOtp);
 
-router.get('/getuserdetails/:user_id', getUserDetails);
-router.get('/getuserapikey/:user_id', getuserapikey);
+router.get('/getuserdetails/:user_id', UserDetails.getUserDetails);
+router.get('/getuserapikey/:user_id', GetUserApiKey.getuserapikey);
+router.put('/updateuserdetails/:user_id', updateUserDetails.updateUserDetails);
 
-router.put('/updateuserdetails/:user_id', updateUserDetails);
-
-router.delete('/deleteuser/:user_id', deleteUser);
+router.delete('/deleteuser/:user_id', DeleteUser.deleteUser);
 
 module.exports = router;
