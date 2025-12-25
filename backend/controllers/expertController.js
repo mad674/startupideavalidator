@@ -86,15 +86,13 @@ class ExpertLogin{
 }
 
 class ExpertGoogleLogin{
-  constructor(){
-    this.oauth2Client = GoogleConfig.initialize();
-  }
   static GoogleLogin = async (req, res, next) => {
     // const { token } = req.body;
+    const oauth2Client = GoogleConfig.initialize();
     try {
       const { code } = req.body; 
       const googleres = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(googleres.tokens);
+      oauth2Client.setCredentials(googleres.tokens);
 
     const userdata = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`, {
         method: 'GET',
@@ -440,8 +438,9 @@ class DeleteExpert{
   };
 }
 class ForgotPassword{
-  constructor(){
-    // const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+ 
+  static ForgotPassword=async (req, res) => {
+    const { email } = req.body;
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -449,11 +448,6 @@ class ForgotPassword{
         pass: process.env.EMAIL_PASS,
       },
     });
-    this.transporter = transporter;
-  }
-  static ForgotPassword=async (req, res) => {
-    const { email } = req.body;
-
     try {
       const user = await Expert.findOne({ email });
       if (!user) return res.status(404).json({ success: false, message: "Expert not found" });
@@ -465,7 +459,7 @@ class ForgotPassword{
       user.otpExpiresAt = otpExpiresAt;
       await user.save();
 
-      await this.transporter.sendMail({
+      await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
         subject: "Dear Expert,Your OTP to reset password for the website startup idea validator!",

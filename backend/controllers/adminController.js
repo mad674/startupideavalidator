@@ -78,12 +78,15 @@ class GetAllExperts{
     };
 }
 class GetAllUserIdeas extends AdminValidation{
+    constructor(){
+        super();
+    }
     // Get all ideas of a specific user (Admin only)
     static getalluserideas = async (req, res, next) => {
         const username  = req.params.admin_id;        
         const { user_id } = req.body;
         try {
-            if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
             const ideas = await Idea.find({ user_id: user_id }).sort({ createdAt: -1 });
@@ -112,12 +115,15 @@ class GetAllUsers{
 }
 
 class DeleteIdea extends AdminValidation{
+    constructor(){
+        super();
+    }
     // Delete a specific idea (Admin only)
     static deleteidea = async (req, res, next) => {
         const username  = req.params.admin_id;        
         const { idea_id } = req.body;
         try {
-            if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
             const idea = await Idea.findByIdAndDelete(idea_id);
@@ -146,12 +152,15 @@ class DeleteIdea extends AdminValidation{
     };
 }
 class DeleteAllUserIdeas extends AdminValidation{
+    constructor(){
+        super();
+    }
     // Delete all ideas of a specific user (Admin only)
     static deletealluserideas = async (req, res, next) => {
         const username  = req.params.admin_id;
         const { user_id } = req.body;
         try {
-            if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){    
+            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){    
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
             const user = await User.findById(user_id);
@@ -242,11 +251,14 @@ class DeleteAllIdeas {
 }
 
 class DeleteUserByAdmin extends AdminValidation{
+    constructor(){
+        super();
+    }
     static deleteUserByAdmin = async (req, res) => {
         const username  = req.params.admin_id;        
         const { user_id } = req.body;
         try {
-            if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
         let user =  await User.findById(user_id);
@@ -278,10 +290,13 @@ class DeleteUserByAdmin extends AdminValidation{
 }
 
 class DeleteAllUsers extends AdminValidation{
+    constructor(){
+        super();
+    }
     static deleteAllUsers = async (req, res) => {
     const username  = req.params.admin_id;
     try {
-        if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+        if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
         const users = await User.find();
@@ -310,10 +325,13 @@ class DeleteAllUsers extends AdminValidation{
     };
 }
 class DeleteAllExpert extends AdminValidation{
+    constructor(){
+        super();
+    }
     static deleteAllExpert = async (req, res) => {
         const username  = req.params.admin_id;
         try {
-            if(!validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
+            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
         const experts = await Expert.find();

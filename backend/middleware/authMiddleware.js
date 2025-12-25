@@ -2,8 +2,6 @@ const jwt = require('jsonwebtoken');
 
 
 class AuthMiddleware{
-    constructor(){}
-        //
     static authMiddleware(req, res, next){
         const token = req.header('Authorization')?.replace('Bearer ', '');
 

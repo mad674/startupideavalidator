@@ -27,10 +27,10 @@ router.post("/register", ExpertRegister.register);
 router.post("/login", ExpertLogin.login);
 router.post("/google", ExpertGoogleLogin.GoogleLogin);
 router.post("/connect/:expertId", Connectidea.connectidea);
-router.post("/sendmsg/:expertId", ChatMessage);
+router.post("/sendmsg/:expertId", ChatMessage.ChatMessage);
 router.post("/deleteMessage/:expertId", DeleteMessage.deleteMessage);
-router.post("/forgot-password", ForgotPassword);
-router.post("/reset-password-otp", ResetPasswordOtp);
+router.post("/forgot-password", ForgotPassword.ForgotPassword);
+router.post("/reset-password-otp", ResetPasswordOtp.ResetPasswordOtp);
 
 router.get("/all", GetallExperts.getallExperts);
 router.get("/getexpert/:ideaId", GetExpert.getExpert);

@@ -1,14 +1,12 @@
 const crypto = require("crypto");
-
+const dotenv = require("dotenv");
+dotenv.config();
 
 class cryptoUtils{
-    constructor(){
-      const SECRET_KEY = Buffer.from(process.env.ENC_SECRET_KEY || "12345678901234567890123456789012"); // 32 bytes
-      this.SECRET_KEY = SECRET_KEY;
-    }
+    static SECRET_KEY = Buffer.from(process.env.ENC_SECRET_KEY || "12345678901234567890123456789012"); // 32 bytes
     static encryptApiKey(apiKey) {
       const iv = crypto.randomBytes(16);
-      const cipher = crypto.createCipheriv("aes-256-cbc", this.SECRET_KEY, iv);
+      const cipher = crypto.createCipheriv("aes-256-cbc", SECRET_KEY, iv);
 
       let encrypted = cipher.update(apiKey, "utf8");
       encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -21,7 +19,7 @@ class cryptoUtils{
       const iv = raw.slice(0, 16);
       const encrypted = raw.slice(16);
 
-      const decipher = crypto.createDecipheriv("aes-256-cbc", this.SECRET_KEY, iv);
+      const decipher = crypto.createDecipheriv("aes-256-cbc", SECRET_KEY, iv);
 
       let decrypted = decipher.update(encrypted);
       decrypted = Buffer.concat([decrypted, decipher.final()]);

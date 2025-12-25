@@ -10,14 +10,12 @@ const  GoogleConfig = require('../middleware/googleconfig');
 dotenv.config();
 
 class UserAuthentication{
-    constructor(){
-      this.oauth2Client = GoogleConfig.initialize();
-    }
     static GoogleLogin = async (req, res, next) => {
       try {
+        const oauth2Client = GoogleConfig.initialize();
         const { code } = req.body; 
-        const googleres = await this.oauth2Client.getToken(code);
-        this.oauth2Client.setCredentials(googleres.tokens);
+        const googleres = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(googleres.tokens);
 
         const userdata = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`, {
             method: 'GET',
@@ -128,8 +126,9 @@ class UserLogin{
 
 class validateApiKeyHelper {
 
-    constructor(){
-      //set api key for user
+    static validateApiKey = async (apikey, provider, model_name) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const providerUrls = {
         groq: "https://api.groq.com/openai/v1",
         openai: "https://api.openai.com/v1",
@@ -137,12 +136,6 @@ class validateApiKeyHelper {
         fireworks: "https://api.fireworks.ai/inference/v1",
         mistral: "https://api.mistral.ai/v1",
       };
-      this.providerUrls = providerUrls;
-    }
-    static validateApiKey = async (apikey, provider, model_name) => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-
       try {
         const baseUrl = providerUrls[provider];
         if (!baseUrl) throw new Error(`Unknown provider: ${provider}`);
@@ -181,6 +174,9 @@ class validateApiKeyHelper {
     };
 }
 class CheckApiKey extends validateApiKeyHelper{
+  constructor(){
+      super();
+  }
     static checkApiKey = async (req, res, next) => {
       try {
         const token = req.headers.authorization?.split(" ")[1];
@@ -201,7 +197,7 @@ class CheckApiKey extends validateApiKeyHelper{
         }
 
         // validate against provider
-        const isValid = await validateApiKey(user.api.apikey, user.api.provider_name, user.api.model_name);
+        const isValid = await super.validateApiKey(user.api.apikey, user.api.provider_name, user.api.model_name);
         if (!isValid) {
           return res.status(401).json({ success: false, message: "API key expired or invalid" });
         }
@@ -219,6 +215,9 @@ class CheckApiKey extends validateApiKeyHelper{
     };
 }
 class SetApiKey extends validateApiKeyHelper{
+  constructor(){
+      super();
+  }
     static setApiKey = async (req, res, next) => {
       try {
         const token = req.headers.authorization?.split(" ")[1];
@@ -246,7 +245,7 @@ class SetApiKey extends validateApiKeyHelper{
         }
         // console.log("Storing API details:", api);
         // validate new key
-        const isValid = await validateApiKey(cryptoUtils.encryptApiKey(apikey),provider_name,model_name);
+        const isValid = await super.validateApiKey(cryptoUtils.encryptApiKey(apikey),provider_name,model_name);
         if (!isValid) {
           return res.status(400).json({ success: false, message: `Invalid or expired API key || No access to ${model_name}` });
         }

@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const ideaRoutes = require('./routes/ideaRoutes');
 const userRoutes = require('./routes/userRoutes');

@@ -44,6 +44,9 @@ class IdeaValidate{
     }
 }
 class CalculateScore extends IdeaValidate{
+    constructor(){
+        super();
+    }
     static calculatescore=async(user_id, savedIdea, token)=> {
         try {
             token=token.split(' ')[1];
@@ -95,10 +98,13 @@ class CalculateScore extends IdeaValidate{
     }
 }
 class SubmitIdea extends CalculateScore{
+    constructor(){
+        super();
+    }
     static submitIdea=async (req, res, next)=> {
         try {
             const { user_id, name, problem_statement, solution, target_market, business_model,team } = req.body;
-            const validea=await validate(user_id, name, problem_statement, solution, target_market, business_model,team,req.headers.authorization);
+            const validea=await super.validate(user_id, name, problem_statement, solution, target_market, business_model,team,req.headers.authorization);
             if (!validea) {
                 return res.status(400).json({ success: false, message: 'Not a Valid startup idea' });
             }  
@@ -135,7 +141,7 @@ class SubmitIdea extends CalculateScore{
             if (!savedIdea) {
                 return res.status(500).json({success: false, message: 'Failed to save idea' });    
             }
-            const getscore=await calculatescore(user_id, savedIdea, req.headers.authorization);
+            const getscore=await super.calculatescore(user_id, savedIdea, req.headers.authorization);
             if(!getscore) {
                 await Idea.deleteOne({ _id: savedIdea._id });
                 return res.status(500).json({ success: false, message: 'IDEA ALREADY EXISTS' });    
@@ -250,6 +256,9 @@ class GetFeedback{
 }
 
 class UpdateIdea extends CalculateScore{
+    constructor(){
+        super();
+    }
     static updateidea=async(req, res, next)=> {
         try {
             const idea = await Idea.findById(req.params.idea_id);
@@ -273,7 +282,7 @@ class UpdateIdea extends CalculateScore{
             return res.status(400).json({ success: false, message: 'Idea name already exists' });
             }
             // console.log('newdata:', newdata);
-            const validatenewdata=await validate(
+            const validatenewdata=await super.validate(
                 idea.user_id,
                 newdata.name,
                 newdata.problem_statement,
@@ -294,7 +303,7 @@ class UpdateIdea extends CalculateScore{
             const updatedIdea = await Idea.findById(idea._id);
             const saved = await updatedIdea.save();
             // const saved=await updatedIdea.save();
-            const calculateScore= await calculatescore(idea.user_id, saved,req.headers.authorization);
+            const calculateScore= await super.calculatescore(idea.user_id, saved,req.headers.authorization);
             // console.log('calculateScore:', calculateScore);
             if(!calculateScore) {
                 await Idea.updateOne(

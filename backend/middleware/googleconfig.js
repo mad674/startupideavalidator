@@ -3,15 +3,10 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 class GoogleConfig {
-    constructor() {
-        this.clientId = process.env.GOOGLE_CLIENT_ID;
-        this.clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    }
-
-    initialize() {
+    static initialize() {
         return new google.auth.OAuth2(
-            this.clientId,
-            this.clientSecret,
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
             'postmessage'
         );
     }
