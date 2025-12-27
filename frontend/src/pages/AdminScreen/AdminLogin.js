@@ -19,7 +19,7 @@ const AdminLogin = ({ onLogin }) => {
         body: JSON.stringify({ username:email, password }),
       });
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
       if (res.ok) {
         // Save admin session info
         onLogin({ adminId: data.admin_id, token:  `Bearer ${data.token }`});

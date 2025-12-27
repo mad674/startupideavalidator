@@ -43,7 +43,7 @@ const AdminUsersPage = () => {
         body: JSON.stringify({ user_id: user._id }),
       });
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
       setUserIdeas(data.ideas || []);
     } catch (err) {
       console.error(err);

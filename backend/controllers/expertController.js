@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const dotenv=require('dotenv');
 const nodemailer = require("nodemailer");
 const  GoogleConfig = require('../middleware/googleconfig');
-
+const {getRedisClient} = require('../config/redis');
 dotenv.config();
 
 
@@ -142,11 +142,25 @@ class GetallExperts{
 class GetExpert{
   static getExpert=async (req, res, next) => {
       try {
-          const ideas=await Idea.findById(req.params.ideaId);
+          const redisClient=getRedisClient();
+          let ideas;
+          ideas=await Idea.findById(req.params.ideaId);
+          // const ideas=await Idea.findById(req.params.ideaId);
           if(!ideas){
               return res.status(404).json({ success: false, message: 'No idea found' });
           }
-          const experts=await Expert.find({_id:{$in:ideas.experts}}).select('-password');
+          let experts=[];
+          for(let i=0;i<ideas.experts.length;i++){
+              const cachedExpert=await redisClient.get(`expert:${ideas.experts[i]}`);
+              if(cachedExpert!=null){
+                  experts.push(JSON.parse(cachedExpert));
+              }else{
+                  const expert=await Expert.findById(ideas.experts[i]);
+                  if(expert) {await redisClient.set(`expert:${ideas.experts[i]}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+                  experts.push(expert)};
+              }
+          }
+          // const experts=await Expert.find({_id:{$in:ideas.experts}}).select('-password');
           // experts.ideas=experts.ideas.filter((i)=>i.ideaid.toString()===req.params.ideaId.toString());
           if (!experts) {
               return res.status(404).json({ success: false, message: 'No expert found' });
@@ -165,7 +179,16 @@ class GetoneExpert{
           if(!expertId){
               return res.status(400).json({ success: false, message: 'Expert ID is required' });
           }
-          const expert=await Expert.findById(expertId).select('-password');
+          const redisClient=getRedisClient();
+          let expert;
+          const cachedExpert=await redisClient.get(`expert:${expertId}`);
+          if(cachedExpert!=null){
+              expert=JSON.parse(cachedExpert);
+          }else{
+              expert=await Expert.findById(expertId).select('-password');
+              if(expert)await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          }
+          // const expert=await Expert.findById(expertId).select('-password');
           if (!expert) {
               return res.status(404).json({ success: false, message: 'No expert found' });
           }
@@ -189,7 +212,9 @@ class UpdateProfile{
           expert.email = email || expert.email;
           expert.expertise = expertise || expert.expertise;
           expert.bio = bio || expert.bio;
-          await expert.save();
+          const updatedExpert = await expert.save();
+          const redisClient=getRedisClient();
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
           res.status(200).json({ success: true, message: 'Profile updated successfully', expert: expert });
       } catch (err) {
           console.error('Update Profile Error:', err.message);
@@ -213,7 +238,9 @@ class Disconnectidea{
 
           await expert.save();
           await idea.save();
-
+          const redisClient=getRedisClient();
+          await redisClient.del(`expert:${req.params.expertId}`);
+          await redisClient.del(`idea:${req.params.ideaId}`);
           res.status(200).json({ success: true, message: 'Idea disconnected from expert successfully' });
       } catch (err) {
           console.error('Disconnect Idea Error:', err);
@@ -226,8 +253,17 @@ class Getchat{
   static getchat = async (req, res, next) => {
     try {
       const { expertId, ideaId } = req.params;
-
-      const expert = await Expert.findById(expertId);
+      const redisClient=getRedisClient();
+      let expert;
+      const cachedExpert=await redisClient.get(`expert:${expertId}`);
+      if(cachedExpert!=null){
+          expert=JSON.parse(cachedExpert);
+      }
+      else{
+          expert=await Expert.findById(expertId);
+          if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+      }
+      // const expert = await Expert.findById(expertId);
       if (!expert || !ideaId) {
         return res.status(404).json({ success: false, message: "No expert found" });
       }
@@ -287,8 +323,9 @@ class ChatMessage{
           };
           ideaEntry.chathistory.push(chatMessage); // <-- lowercase h
 
-          await expert.save();
-
+          const updatedExpert = await expert.save();
+          const redisClient=getRedisClient();
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
           res.status(200).json({ success: true, message: 'Message added successfully', chat: chatMessage });
       } catch (err) {
           console.error('Add Chat Message Error:', err.message);
@@ -311,7 +348,9 @@ class DeleteMessage{
               return res.status(404).json({ success: false, message: 'No idea found' });
           }
           ideaEntry.chathistory = ideaEntry.chathistory.filter(m => m._id.toString() !== messageId.toString());
-          await expert.save();
+          const updatedExpert = await expert.save();
+          const redisClient=getRedisClient();
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
           res.status(200).json({ success: true, message: 'Message deleted successfully' });
       } catch (err) {
           console.error('Delete Message Error:', err.message);
@@ -325,7 +364,17 @@ class GetAllIdeas{
   static getAllIdeas = async (req, res, next) => {
       try {
           const expertId = req.params.expertId;
-          const expert = await Expert.findById(expertId);//.populate('ideas.idea_id');
+          const redisClient=getRedisClient();
+          const cachedExpert=await redisClient.get(`expert:${expertId}`);
+          let expert;
+          if(cachedExpert!=null){
+              expert=JSON.parse(cachedExpert);
+          }
+          else{
+              expert=await Expert.findById(expertId);
+              if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          }
+          // const expert = await Expert.findById(expertId);//.populate('ideas.idea_id');
           const ideas=await Idea.find({_id:{$in:expert.ideas.map(i=>i.ideaid)}});//.populate('createdBy','name email');
           if (!expert) {
               return res.status(404).json({ message: 'Expert not found' });
@@ -373,7 +422,9 @@ class Connectidea{
 
       await expert.save();
       await idea.save();
-
+      const redisClient=getRedisClient();
+      await redisClient.del(`expert:${expertId}`);
+      await redisClient.del(`idea:${ideaId}`);
       res.status(200).json({ success: true, message: "Idea connected to expert successfully" });
     } catch (err) {
       console.error("Connect Idea Error:", err.message);
@@ -400,7 +451,8 @@ class UpdatePassword{
           if (!expert) {
               return res.status(404).json({ message: 'Expert not found' });
           }
-
+          const redisClient=getRedisClient();
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
           res.status(200).json({ success: true, message: 'Password updated successfully' });
       } catch (err) {
           console.error('Update Password Error:', err.message);
@@ -426,10 +478,15 @@ class DeleteExpert{
         { experts: expertId },
         { $pull: { experts: expertId } }  // remove expertId from experts array
       );
-
+      const redisClient=getRedisClient();
+      for (const idea of expert.ideas) {
+        // const redisClient=getRedisClient();
+        await redisClient.del('idea:' + idea.ideaid);
+      }
       // 3. Delete expert
       await Expert.findByIdAndDelete(expertId);
-
+      // const redisClient=getRedisClient();
+      await redisClient.del(`expert:${expertId}`);   
       res.status(200).json({ success: true, message: "Expert deleted and references removed" });
     } catch (err) {
       console.error(err);
@@ -465,7 +522,8 @@ class ForgotPassword{
         subject: "Dear Expert,Your OTP to reset password for the website startup idea validator!",
         html: `<p>Dear Expert Your OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
       });
-
+      const redisClient=getRedisClient();
+      await redisClient.del(`expert:${user._id}`);
       res.json({ success: true, message: "OTP sent to your email", expertId: user._id });
     } catch (err) {
       console.error(err);
@@ -493,7 +551,8 @@ class ResetPasswordOtp{
     user.otpExpiresAt = null; 
     user.timestamp = Date.now(); // clear expiry
     await user.save();
-
+    const redisClient=getRedisClient();
+    await redisClient.del(`expert:${expertId}`);
     res.json({ success: true, message: "Password updated successfully" });
   } catch (err) {
     console.error(err);

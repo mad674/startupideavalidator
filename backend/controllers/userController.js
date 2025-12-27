@@ -6,7 +6,7 @@ const cryptoUtils= require('../utils/encrypt');
 const dotenv = require('dotenv');
 const nodemailer=require("nodemailer");
 const  GoogleConfig = require('../middleware/googleconfig');
-
+const {getRedisClient} = require('../config/redis');
 dotenv.config();
 
 class UserAuthentication{
@@ -259,7 +259,8 @@ class SetApiKey extends validateApiKeyHelper{
         if (!user) {
           return res.status(404).json({ success: false, message: "User not found" });
         }
-
+        const redisClient = getRedisClient();
+        await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });    
         res.status(200).json({
           success: true,
           message: "API key saved successfully",
@@ -274,13 +275,17 @@ class SetApiKey extends validateApiKeyHelper{
 class UserDetails{
     static getUserDetails = async (req, res, next) => {
         try {
+          const redisClient = getRedisClient();
             const userId = req.params.user_id; // Assuming user ID is stored in req.user after authentication
+            const cachedUser = await redisClient.get(`user:${userId}`);
+            if (cachedUser!=null) {
+                return res.status(200).json({ user: JSON.parse(cachedUser) });
+            }
             const user = await User.findById(userId).select('-password'); // Exclude password from response
-
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
-
+            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.status(200).json({ user });
         } catch (err) {
             console.error('Get User Details Error:', err.message);
@@ -291,16 +296,22 @@ class UserDetails{
 class GetUserApiKey{
     static getuserapikey = async (req, res, next) => {
         try {
+          const redisClient = getRedisClient();
             const userId = req.params.user_id; 
             const token = req.headers.authorization.split(' ')[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
             if(req.params.user_id != decodedToken.id)
                 return res.status(401).json({ success: false, message: 'Unauthorized' });// Assuming user ID is stored in req.user after authentication
+            const cachedApi = await redisClient.get(`user:${userId}`);
+            if (cachedApi!=null) {
+                return res.status(200).json({ api: JSON.parse(cachedApi).api });
+            }
             const user = await User.findById(userId).select('-password'); // Exclude password from response
-
+            
             if (!user.api) {
                 return res.status(404).json({ message: 'User not found' });
             }
+            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.status(200).json({ api: user.api });
         } catch (err) {
             console.error('Get User Details Error:', err.message);
@@ -324,6 +335,8 @@ class updateUserDetails{
             if (!user) {
                 return res.status(404).json({success: false, message: 'User not found' });
             }
+            const redisClient = getRedisClient();
+            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.status(200).json({success: true, message: 'User details updated successfully' });
         } catch (err) {
             console.error('Update User Details Error:', err.message);
@@ -358,6 +371,8 @@ class DeleteUser{
                 await user.save();
             }
             user =await User.findByIdAndDelete(req.params.user_id);
+            const redisClient = getRedisClient();
+            await redisClient.del(`user:${req.params.user_id}`);
             res.status(200).json({ success: true, message: 'User deleted successfully' });
         } catch (err) {
             console.error('Delete User Error:', err.message);
@@ -407,7 +422,8 @@ class PasswordReset{
           subject: "Your OTP to reset password for the website startup idea validator!",
           html: `<p>Your OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
         });
-
+        const redisClient=getRedisClient();
+        await redisClient.del('user:' + user._id);         
         res.json({ success: true, message: "OTP sent to your email", userId: user._id });
       } catch (err) {
         console.error(err);
@@ -434,7 +450,8 @@ class ResetPassword{
         user.otp = null;           // clear OTP
         user.otpExpiresAt = null;  // clear expiry
         await user.save();
-
+        const redisClient=getRedisClient();
+        await redisClient.del('user:'+userId);         
         res.json({ success: true, message: "Password updated successfully" });
       } catch (err) {
         console.error(err);

@@ -17,8 +17,7 @@ const ChatScreen = () => {
     if(!expertId || !token){
       return <Navigate to="/expert/login" replace={true} />
     }
-  useEffect(() => {
-    const fetchChat = async () => {
+  const fetchChat = async () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_BACKEND}/expert/getchat/${expertId}/${ideaId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -29,6 +28,7 @@ const ChatScreen = () => {
         console.error("Error fetching chat:", err);
       }
     };
+  useEffect(() => {
     fetchChat();
   }, [ideaId, token, expertId]);
 
@@ -51,7 +51,8 @@ const ChatScreen = () => {
           showToast(data.message || "Failed to send message");
       } 
       showToast("🎉 Message sent",true);
-      setMessages([...messages, data.chat]);
+      // setMessages([...messages, data.chat]);
+      fetchChat();
       setNewMessage("");
     } catch (err) {
       console.error("Error sending message:", err);
@@ -81,7 +82,7 @@ const ChatScreen = () => {
         // alert(JSON.stringify(data));
         showToast("Message deleted successfully",true);
         setMessages(messages.filter((msg) => msg._id !== messageId));
-        window.location.reload();
+        // window.location.reload();
       } catch (err) {
         console.error(err);
       }

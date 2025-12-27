@@ -55,7 +55,7 @@ const ExpertDashboard = () => {
     });
 
     setIdeas(updatedIdeas || []);
-    console.log(JSON.stringify(updatedIdeas || []));
+    // console.log(JSON.stringify(updatedIdeas || []));
   } catch (err) {
     console.error(err);
   }

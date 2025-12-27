@@ -14,8 +14,8 @@ const ExpertChat = () => {
   const [expert, setExpert] = useState({});
   const token = localStorage.getItem("token");
   const { showToast } = useToast();
-  useEffect(() => {
-    const fetchChat = async () => {
+
+  const fetchChat = async () => {
       try {
         const res = await fetch(
           `${process.env.REACT_APP_BACKEND}/expert/getchat/${expertId}/${ideaId}`,
@@ -35,6 +35,7 @@ const ExpertChat = () => {
         console.error(err);
       }
     };
+  useEffect(() => {
     fetchChat();
   }, [ideaId, token]);
 
@@ -61,7 +62,8 @@ const ExpertChat = () => {
       } 
       // alert(JSON.stringify(data));
       showToast("🎉 Message sent",true);
-      setMessages([...messages, data.chat]);
+      fetchChat();
+      // setMessages([...messages, data.chat]);
       setNewMessage("");
     } catch (err) {
       console.error(err);

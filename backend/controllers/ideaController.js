@@ -4,7 +4,7 @@ const Expert = require('../models/Expert');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
-
+const {getRedisClient}=require('../config/redis');
 dotenv.config();
 
 class IdeaValidate{
@@ -103,6 +103,7 @@ class SubmitIdea extends CalculateScore{
     }
     static submitIdea=async (req, res, next)=> {
         try {
+            const redisClient=getRedisClient();
             const { user_id, name, problem_statement, solution, target_market, business_model,team } = req.body;
             const validea=await super.validate(user_id, name, problem_statement, solution, target_market, business_model,team,req.headers.authorization);
             if (!validea) {
@@ -155,7 +156,8 @@ class SubmitIdea extends CalculateScore{
             }
             getuser.ideas.push(idea._id.toString());
             getuser.updatedAt = new Date();
-            await getuser.save();
+            const savedUser=await getuser.save();
+            await redisClient.set(`user:${user_id}`, JSON.stringify(savedUser),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });           
             res.status(200).json({ success: true, message: 'Idea Submitted',idea_id: idea._id.toString() });
         } catch (err) {
             console.error('Error in submitIdea:', err);
@@ -202,7 +204,8 @@ class Getsuggestions{
                 { $set: { suggestions: suggestionResponse.suggestions } },
                 { new: true }
             );
-
+            const redisClient = getRedisClient();
+            await redisClient.del(`idea:${idea._id}`);            
             res.status(200).json({success: true, message: 'Suggestions fetched successfully', suggestions: suggestionResponse.suggestions });
         } catch (err) {
             console.error('Error in getsuggestions:', err);
@@ -247,6 +250,8 @@ class GetFeedback{
                 { $set: { feedback: feedbackResponse.feedback } },
                 { new: true }
             );
+            const redisClient = getRedisClient();
+            await redisClient.del(`idea:${idea._id}`);            
             res.status(200).json({ success: true, message: 'Feedback fetched successfully', feedback: feedbackResponse.feedback });
         } catch (err) {
             console.error('Error in getfeedback:', err);
@@ -312,6 +317,8 @@ class UpdateIdea extends CalculateScore{
                 );
                 return res.status(500).json({success: false, message: 'IDEA already exists!' });    
             }
+            const redisClient = getRedisClient();
+            await redisClient.set(`idea:${idea._id}`, JSON.stringify(saved),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });            
             // console.log('saved');
             res.status(200).json({ message: 'Idea updated successfully',success: true});
         } catch (err) {
@@ -324,9 +331,14 @@ class UpdateIdea extends CalculateScore{
 class GetIdeaById{
     static getIdeaById = async (req, res, next) => {
     try {
-        
+        const redisClient=getRedisClient();
+        const cachedIdea = await redisClient.get(`idea:${req.params.idea_id}`);
+        if (cachedIdea!=null) {
+            return res.json({ success: true, idea: JSON.parse(cachedIdea) });
+        }
         const idea = await Idea.findById(req.params.idea_id);
         if (!idea) return res.status(404).json({ success:false,message: 'Idea not found' });
+        await redisClient.set(`idea:${req.params.idea_id}`, JSON.stringify(idea),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
         res.json({ success: true, idea: idea });
     } catch (err) {
         console.error('Error in getIdeaById:', err);
@@ -338,15 +350,31 @@ class GetIdeaById{
 class Getexpertchats{
     static getexpertchats=async(req, res, next)=> {
         try {
-            const idea = await Idea.findById(req.params.ideaid);
-            if (!idea) {
-                return res.status(404).json({ message: 'Idea not found' });
+            let idea;
+            const redisClient = getRedisClient();
+            const idea_id=req.params.ideaid;
+            const cachedIdea = await redisClient.get(`idea:${idea_id}`);
+            if (cachedIdea!=null) {
+                idea = JSON.parse(cachedIdea);
+            } else {
+                idea = await Idea.findById(idea_id);
+                // const idea = await Idea.findById(req.params.ideaid);
+                if (!idea) {
+                    return res.status(404).json({ message: 'Idea not found' });
+                }
+                await redisClient.set(`idea:${idea_id}`, JSON.stringify(idea),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });            
             }
             let allexpertchats = [];
             for (let i = 0; i < idea.experts.length; i++) {
                 const expertId = idea.experts[i]; // extract expert ID
-                const expert = await Expert.findById(expertId);
-
+                let expert;
+                const cachedExpert = await redisClient.get(`expert:${expertId}`);
+                if (cachedExpert!=null) {
+                    expert = JSON.parse(cachedExpert);
+                } else {
+                    expert = await Expert.findById(expertId);
+                    await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+                }
                 if (expert) {
                     const chatData = expert.ideas.find(
                         (e) => e.ideaid.toString() === idea._id.toString()
@@ -362,7 +390,7 @@ class Getexpertchats{
                     });
                 }
             }
-        
+            
             res.status(200).json({success: true, expertchats: allexpertchats });
         } catch (err) {
             console.error('Error in getexpertchat:', err);
@@ -376,13 +404,29 @@ class GetAllUserIdeas{
     static getAllUserIdeas = async (req, res, next) => {
         try {
             // 1️⃣ Find the user
-            const user = await User.findById(req.params.user_id);
+            let user;   
+            const redisClient=getRedisClient();
+            const cachedUser = await redisClient.get(`user:${req.params.user_id}`);
+            // if (cachedUser!=null) {
+            //     user = JSON.parse(cachedUser);
+            // }else{
+                user = await User.findById(req.params.user_id);
+            // }
             if (!user || !user.ideas || user.ideas.length === 0) {
                 return res.status(404).json({ message: 'No ideas found for this user' });
             }
-
+            let ideas = [];
+            for(let i=0;i<user.ideas.length;i++){
+                const cachedIdea = await redisClient.get(`idea:${user.ideas[i]}`);
+                if (cachedIdea!=null) {
+                    ideas.push(JSON.parse(cachedIdea));
+                }else{
+                    const idea = await Idea.findById(user.ideas[i]);
+                    await redisClient.set(`idea:${idea._id}`, JSON.stringify(idea),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+                }
+            }
             // 2️⃣ Fetch all ideas matching those idea_ids
-            const ideas = await Idea.find({ _id: { $in: user.ideas } });
+            // const ideas = await Idea.find({ _id: { $in: user.ideas } });
             res.json(ideas);
         } catch (err) {
             console.error('Error in getAllUserIdeas:', err);
@@ -421,8 +465,11 @@ class DeleteIdea{
             // ✅ Only access user_id if idea is not null
             const user = await User.findById(idea.user_id);
             user.ideas.pull(idea._id);
-            await user.save(); // ✅ Needed here
+            const updatedUser = await user.save(); // ✅ Needed here
             if (!idea) return res.status(404).json({ message: 'Idea not found' });
+            const redisClient = getRedisClient();
+            await redisClient.set(`user:${idea.user_id}`, JSON.stringify(updatedUser),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.del(`idea:${req.params.idea_id}`);  
             res.json({success: true, message: 'Idea deleted successfully' });
         } catch (err) {
             console.error('Error in deleteIdea:', err);
@@ -454,7 +501,12 @@ class DeleteAllUserIdeas{
             }
             await Idea.deleteMany({ _id: { $in: user.ideas } });
             user.ideas = [];
-            await user.save();
+            const updatedUser = await user.save();
+            const redisClient = getRedisClient();
+            for(let i=0;i<user.ideas.length;i++){
+                await redisClient.del(`idea:${user.ideas[i]}`);  
+            }
+            await redisClient.set(`user:${user._id}`, JSON.stringify(updatedUser),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.json({ success: true, message: 'All ideas deleted successfully' });
         } catch (err) {
             console.error('Error in deleteAllUserIdeas:', err);

@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 dotenv.config();
-
+const {getRedisClient} = require('../config/redis');
 
 class AdminValidation{
     static validateAdmin(token,secret,username){
@@ -144,6 +144,9 @@ class DeleteIdea extends AdminValidation{
             user.ideas.pull(idea._id);
             await user.save(); // ✅ Needed here
             if (!idea) return res.status(404).json({ message: 'Idea not found' });
+            const redisClient=getRedisClient();
+            await redisClient.del(`idea:${idea._id}`);
+            await redisClient.del(`user:${idea.user_id}`);
             res.json({success: true, message: 'Idea deleted successfully' });
         } catch (err) {
             console.error('Error deleting idea:', err);
@@ -176,9 +179,14 @@ class DeleteAllUserIdeas extends AdminValidation{
             if(deletedIdeasResponse.success == false) {
                 return res.status(400).json({ success: false, message: deletedIdeasResponse.message });
             }
+            const redisClient=getRedisClient();
             await Idea.deleteMany({ _id: { $in: user.ideas } });
             user.ideas = [];
             await user.save();
+            for (const ideaId of user.ideas) {
+                await redisClient.del(`idea:${ideaId}`);
+            }
+            await redisClient.del(`user:${user_id}`);
             res.json({ success: true, message: 'All ideas deleted successfully' });
         } catch (err) {
             console.error('Error deleting all user ideas:', err);
@@ -206,10 +214,14 @@ class DeleteExpert {
             { experts: expertId },
             { $pull: { experts: expertId } }  // remove expertId from experts array
             );
-
+            const redisClient=getRedisClient();
+            for(let idea of expert.ideas){
+                await redisClient.del('idea:' + idea.ideaid);
+            }
             // 3. Delete expert
             await Expert.findByIdAndDelete(expertId);
-
+            // const redisClient=getRedisClient();
+            await redisClient.del(`expert:${expertId}`);
             res.status(200).json({ success: true, message: "Expert deleted and references removed" });
         } catch (err) {
             console.error(err);
@@ -242,6 +254,8 @@ class DeleteAllIdeas {
                     await user.save();
                 }
             }
+            const redisClient=getRedisClient();
+            await redisClient.flushall();
             res.json({ success: true, message: 'All ideas deleted successfully' });
         } catch (err) {
             console.error('Error deleting all ideas:', err);
@@ -265,6 +279,7 @@ class DeleteUserByAdmin extends AdminValidation{
         if (!user) {
             return res.status(404).json({success: false, message: 'No user found' });
         }
+        const redisClient=getRedisClient();
         if(user.ideas.length > 0) {
             const deletedIdeas = await fetch(`${process.env.FASTAPI_URL}/api/delete-all-ideas`, {
                 method: "POST",
@@ -278,8 +293,12 @@ class DeleteUserByAdmin extends AdminValidation{
             await Idea.deleteMany({ _id: { $in: user.ideas } });
             user.ideas = [];
             await user.save();
+            for(let idea of user.ideas){
+                await redisClient.del('idea:' + idea);
+            }
         }
         user =await User.findByIdAndDelete(user_id);
+        await redisClient.del(`user:${user_id}`);
         res.status(200).json({ success: true, message: 'User deleted successfully' });
     }
     catch (err) {
@@ -317,6 +336,8 @@ class DeleteAllUsers extends AdminValidation{
             }
             await User.findByIdAndDelete(user._id);
         }
+        const redisClient=getRedisClient();
+        await redisClient.flushall();
         res.status(200).json({ success: true, message: 'All users deleted successfully' });
     } catch (err) {
         console.error('Error deleting all users:', err);
@@ -329,25 +350,45 @@ class DeleteAllExpert extends AdminValidation{
         super();
     }
     static deleteAllExpert = async (req, res) => {
-        const username  = req.params.admin_id;
         try {
-            if(!super.validateAdmin(req.headers.authorization.split(' ')[1],process.env.JWT_SECRET,username)){
-                return res.status(401).json({ success: false, message: 'Unauthorized' });
+            const username = req.params.admin_id;
+
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, message: 'No token provided' });
             }
-        const experts = await Expert.find();
-        for (const expert of experts) {
+
+            const token = authHeader.split(' ')[1];
+
+            if (!super.validateAdmin(token, process.env.JWT_SECRET, username)) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+            }
+
+            const experts = await Expert.find({}, '_id');
+            const expertIds = experts.map(e => e._id);
+
+            if (expertIds.length) {
             await Idea.updateMany(
-                  { experts: expert._id },
-                  { $pull: { experts: expert._id } }  // remove expertId from experts array
-                );
-            await Expert.findByIdAndDelete(expert._id);
+                { experts: { $in: expertIds } },
+                { $pull: { experts: { $in: expertIds } } }
+            );
+
+            await Expert.deleteMany({ _id: { $in: expertIds } });
+            }
+
+            const redisClient = getRedisClient();
+            if (redisClient) {
+            await redisClient.flushAll();
+            }
+
+            res.status(200).json({ success: true, message: 'All experts deleted successfully' });
+
+        } catch (err) {
+            console.error(err.stack);
+            res.status(500).json({ success: false, message: 'Server error' });
         }
-        res.status(200).json({ success: true, message: 'All experts deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting all experts:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
+    };
+
 }
 
 module.exports = { 
