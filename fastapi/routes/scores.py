@@ -1,8 +1,9 @@
+# generate scores api
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 # from agents.clarifier import clarify_idea
-from agents.scorer import ScorerAgent
+from chains.scorer import ScorerAgent
 # from agents.suggester import suggest_improvements
 # from agents.validator import validate_idea
 from memory.memory_store import MemoryStore

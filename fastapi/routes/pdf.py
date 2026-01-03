@@ -1,4 +1,4 @@
-# routes/pdf.py
+# routes/pdf.py generates pdf api
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from utils.pdf_generator import PDFGenerator

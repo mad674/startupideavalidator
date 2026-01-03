@@ -1,9 +1,10 @@
+# idea validate api
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 # from agents.clarifier import clarify_idea
 # from agents.scorer import ScorerAgent
 # from agents.suggester import suggest_improvements
-from agents.validator import ValidatorAgent
+from chains.validator import ValidatorAgent
 # from memory.memory_store import MemoryStore
 import json
 router = APIRouter()

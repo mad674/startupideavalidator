@@ -1,3 +1,4 @@
+# delete api's
 from fastapi import APIRouter
 from pydantic import BaseModel
 from memory.memory_store import MemoryDelete,MemoryGet

@@ -1,7 +1,8 @@
+# generate suggestions api
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from memory.memory_store import MemoryUpdate
-from agents.suggester import SuggesterAgent
+from chains.suggester import SuggesterAgent
 import json
 
 router = APIRouter()

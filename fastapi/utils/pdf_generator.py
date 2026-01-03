@@ -1,4 +1,4 @@
-# utils/pdf_generator.py
+# utils/pdf_generator.py pdf generator module
 from fpdf import FPDF
 from datetime import datetime
 import os
