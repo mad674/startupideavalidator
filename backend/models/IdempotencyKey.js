@@ -27,7 +27,7 @@ const IdempotencyKeySchema = new mongoose.Schema(
 );
 
 IdempotencyKeySchema.index(
-  { key: 1, method: 1, path: 1, userId: 1 },
+  { key: 1, method: 1, path: 1, userId: 1,createdAt: -1,_id: -1 },
   { unique: true },
 );
 

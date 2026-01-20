@@ -15,6 +15,10 @@ const {
     GetAllExperts,
     DeleteAllExpert
 }= require('../controllers/adminController');
+const User = require('../models/User');
+const Idea = require('../models/Idea');
+const Expert = require('../models/Expert');
+const paginate =require('../middleware/paginate');
 
 
 router.post('/deleteuser/:admin_id', DeleteUserByAdmin.deleteUserByAdmin);
@@ -25,9 +29,9 @@ router.post("/deleteidea/:admin_id", DeleteIdea.deleteidea);
 router.post("/deletealluserideas/:admin_id", DeleteAllUserIdeas.deletealluserideas);
 router.post('/deleteExpert/:admin_id', DeleteExpert.deleteExpert);
 
-router.get('/allusers/:admin_id', GetAllUsers.getAllUsers);
-router.get('/allexperts/:admin_id', GetAllExperts.getallexpects);
-router.get("/allideas/:admin_id", GetAllIdeas.getallideas);
+router.get('/allusers/:admin_id',paginate(User), GetAllUsers.getAllUsers);
+router.get('/allexperts/:admin_id',paginate(Expert), GetAllExperts.getallexpects);
+router.get("/allideas/:admin_id",paginate(Idea), GetAllIdeas.getallideas);
 
 
 router.delete('/deleteallideas/:admin_id',DeleteAllIdeas.deleteallideas);

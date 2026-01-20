@@ -53,8 +53,9 @@ class GetAllIdeas{
             if(process.env.ADMIN_NAME!=username){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
-            const ideas = await Idea.find().sort({ createdAt: -1 });
-            res.json({"ideas": ideas});
+            res.json(res.paginatedResult);
+            // const ideas = await Idea.find().sort({ createdAt: -1 });
+            // res.json({"ideas": ideas});
         } catch (err) {
             console.error('Error fetching all ideas:', err);
             next(err);
@@ -69,8 +70,9 @@ class GetAllExperts{
             if(process.env.ADMIN_NAME!=username){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
-            const ideas = await Expert.find().sort({ createdAt: -1 });
-            res.json({"experts": ideas});
+            res.json(res.paginatedResult);
+            // const ideas = await Expert.find().sort({ createdAt: -1 });
+            // res.json({"experts": ideas});
         } catch (err) {
             console.error('Error fetching all ideas:', err);
             next(err);
@@ -105,8 +107,9 @@ class GetAllUsers{
             if(process.env.ADMIN_NAME!=username){
                 return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
-            const users = await User.find(); // Exclude sensitive fields
-            res.json({ users });
+            res.json(res.paginatedResult);
+            // const users = await User.find(); // Exclude sensitive fields
+            // res.json({ users });
         } catch (err) {
             console.error('Error fetching users:', err);
             res.status(500).json({ success: false, message: 'Server error' });

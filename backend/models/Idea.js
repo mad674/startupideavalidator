@@ -18,5 +18,6 @@ const ideaSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date,default: null }, 
 }, { timestamps: true });
+ideaSchema.index({ createdAt: -1, _id: -1 });
 
 module.exports = mongoose.model('Idea', ideaSchema);

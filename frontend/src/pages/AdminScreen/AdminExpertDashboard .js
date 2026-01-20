@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef  } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../components/Popups/Popup";
 
@@ -13,25 +13,67 @@ const AdminExpertDashboard = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    fetchAllExperts();
-  }, []);
+  const loaderRef = useRef(null);
 
   // Fetch all experts
-  const fetchAllExperts = async () => {
+  const fetchAllExperts = useCallback(async () => {
+    if (loading || !hasMore) return;
+
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND}/admin/allexperts/${adminId}`, {
+      let url = `${process.env.REACT_APP_BACKEND}/admin/allexperts/${adminId}?limit=10`;
+
+      if (nextCursor) {
+        url += `&cursor=${encodeURIComponent(nextCursor)}`;
+      }
+
+      const res = await fetch(url, {
         headers: { Authorization: token },
       });
       const data = await res.json();
-      setExperts(data.experts || []);
+      setExperts((prev) => {
+        const combined = [...prev, ...(data.data || [])];
+
+        // ✅ remove duplicate _id
+        return Array.from(new Map(combined.map((u) => [u._id, u])).values());
+      });
+
+      // ✅ update cursor
+      setNextCursor(data.nextCursor || null);
+
+      // ✅ stop if no more
+      if (!data.nextCursor || (data.data || []).length === 0) {
+        setHasMore(false);
+      }
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
-  };
+  },[adminId, token, nextCursor, loading, hasMore]);
+
+  useEffect(() => {
+    fetchAllExperts();
+  }, []);
+    // ✅ infinite scroll observer
+  useEffect(() => {
+    if (!loaderRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchAllExperts();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(loaderRef.current);
+
+    return () => observer.disconnect();
+  }, [fetchAllExperts]);
 
   const deleteExpert = async (expert) => {
     if (!window.confirm(`Are you sure you want to delete ${expert.email}?`)) return;
@@ -45,7 +87,8 @@ const AdminExpertDashboard = () => {
       if (!data.success) return showToast(data.message);
       showToast("Expert deleted successfully");
       goBack();
-      fetchAllExperts();
+      // fetchAllExperts();
+      setExperts((prev) => prev.filter((e) => e._id !== expert._id));
     } catch (err) {
       console.error(err);
     }
@@ -61,7 +104,8 @@ const AdminExpertDashboard = () => {
       const data=await res.json();
       if(!data.success) return showToast(data.message,data.success);
       showToast("All experts deleted successfully");
-      fetchAllExperts();
+      // fetchAllExperts();
+      setExperts([]);
     } catch (err) {
       console.error(err);
     }
@@ -112,6 +156,8 @@ const AdminExpertDashboard = () => {
               <button style={styles.deleteUserBtn} onClick={() => deleteExpert(expert)}>Delete Expert</button>
             </div>
           ))}
+          {/* 👇 THIS is the trigger point */}
+          <div ref={loaderRef} style={{ height: "30px" }} />
           {filteredExperts.length === 0 && <p>No experts found.</p>}
         </div>
       )}

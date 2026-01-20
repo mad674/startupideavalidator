@@ -25,6 +25,7 @@ const expertSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+expertSchema.index({ createdAt: -1, _id: -1 });
 
 // ✅ Fix: check if model already exists before compiling
 module.exports =mongoose.models.Expert || mongoose.model("Expert", expertSchema);

@@ -16,13 +16,8 @@ const userSchema = new mongoose.Schema({
     api:{type:Object,default: {}},
     otp:Number,
     otpExpiresAt:Date,
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,default: null
-    }
-});
+},{timestamps: true});
+
+userSchema.index({ createdAt: -1, _id: -1 });
 
 module.exports = mongoose.model('User', userSchema);

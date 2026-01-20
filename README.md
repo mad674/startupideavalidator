@@ -7,6 +7,10 @@
 
 **software development lifecycle (SDLC) with an Agile/Iterative approach**
 
+**Redis cache memory**
+
+**Design patterns - IdempotencyKey , Pagination**
+
 ---
 
 ## Key Features

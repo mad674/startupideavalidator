@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../components/Popups/Popup";
 
@@ -9,28 +9,77 @@ const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null); // Selected user
   const [userIdeas, setUserIdeas] = useState([]);
   const [ideaSearch, setIdeaSearch] = useState(""); // Search for ideas
   const navigate = useNavigate();
   const {showToast}=useToast();
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
 
-  const fetchAllUsers = async () => {
+  const loaderRef = useRef(null);
+  const fetchUsers = useCallback(async () => {
+    if (loading || !hasMore) return;
+
     setLoading(true);
+
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND}/admin/allusers/${adminId}`, {
+      let url = `${process.env.REACT_APP_BACKEND}/admin/allusers/${adminId}?limit=10`;
+
+      if (nextCursor) {
+        url += `&cursor=${encodeURIComponent(nextCursor)}`;
+      }
+
+      const res = await fetch(url, {
         headers: { Authorization: token },
       });
+
       const data = await res.json();
-      setUsers(data.users || []);
+
+      // ✅ append new users
+      setUsers((prev) => {
+        const combined = [...prev, ...(data.data || [])];
+
+        // ✅ remove duplicate _id
+        return Array.from(new Map(combined.map((u) => [u._id, u])).values());
+      });
+
+
+      // ✅ update cursor
+      setNextCursor(data.nextCursor);
+      // console.log(data.nextCursor, data.data.length);
+      // ✅ stop if no more
+      if (!data.nextCursor || (data.data || []).length === 0) {
+        setHasMore(false);
+      }
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
-  };
+  }, [adminId, token, nextCursor, loading, hasMore]);
+
+  // ✅ first time load
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // ✅ infinite scroll observer
+  useEffect(() => {
+    if (!loaderRef.current) return;
+    if (!hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchUsers();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(loaderRef.current);
+
+    return () => observer.disconnect();
+  }, [fetchUsers,hasMore]);
 
   const fetchUserIdeas = async (user) => {
     try {
@@ -73,7 +122,7 @@ const AdminUsersPage = () => {
       if(!data.success) return showToast(data.message);
       showToast("User deleted successfully");
       goBack();
-      fetchAllUsers();
+      setUsers((prev) => prev.filter((u) => u._id !== user._id));
     } catch (err) {
       console.error(err);
     }
@@ -90,7 +139,8 @@ const AdminUsersPage = () => {
         method: "DELETE",
         headers: { Authorization: token },
       });
-      fetchAllUsers();
+      // fetchUsers();
+      setUsers([]);
     } catch (err) {
       console.error(err);
     }
@@ -203,6 +253,8 @@ const AdminUsersPage = () => {
               <p>{user.email}</p>
             </div>
           ))}
+          {/* 👇 THIS is the trigger point */}
+          <div ref={loaderRef} style={{ height: "30px" }} />
           {filteredUsers.length === 0 && <p>No users found.</p>}
         </div>
       )}
