@@ -102,16 +102,21 @@ export default function Suggestions() {
           <h3>Improvements</h3>
           <ul>
             {suggestions.improvements?.map((s, i) => (
-              <li key={i}>{s}</li>
+              <li key={i}>
+                {typeof s === "string" ? s : s.improvement || JSON.stringify(s)}
+              </li>
             ))}
           </ul>
 
           <h3>Rationale</h3>
           <ul>
             {suggestions.rationale?.map((s, i) => (
-              <li key={i}>{s}</li>
+              <li key={i}>
+                {typeof s === "string" ? s : s.rationale || JSON.stringify(s)}
+              </li>
             ))}
           </ul>
+
         </div>
         </div>
       )}

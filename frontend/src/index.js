@@ -5,7 +5,9 @@ import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { ToastProvider } from './components/Popups/Popup';
 // import { GoogleOAuthProvider } from "@react-oauth/google";
+import { overrideFetchWithIdempotency } from "./utils/overridefetchWithIdempotency";
 
+overrideFetchWithIdempotency();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -9,6 +9,7 @@ const ErrorHandler  = require('./middleware/errorHandler');
 const Mongodb = require('./config/db'); // DB connection file
 const { connectToRedis} = require('./config/redis'); // Redis connection file
 const dotenv = require('dotenv');
+const {idempotencyMiddleware} = require('./middleware/idempotency');
 dotenv.config();
 
 const app = express();
@@ -33,28 +34,25 @@ app.head('/health', (req, res) => {
 // Rate limiter config
 const windowSeconds = Number(process.env.RATE_LIMIT_WINDOW) || 900; // 15 minutes
 const maxRequests = Number(process.env.RATE_LIMIT_MAX) || 300;
-
+// rate limiter middleware
+app.use(
+    ['/idea', '/user', '/admin', '/expert'],
+    RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'api' })
+  );
+//idempotency middleware
+app.use(
+  idempotencyMiddleware({
+    ttlMs: 60 * 60 * 1000,// expiry time 1 hour
+    enforce: false,// if true, missing key => 400 for unsafe methods
+    useOriginalUrl: false, // false => req.path, true => req.originalUrl
+    waitForCompletion: true, // true => wait for completion, false => return immediately
+  })
+);
 // API Routes with rate limiting
-app.use(
-    '/idea',
-    RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'idea' }),
-    ideaRoutes
-);
-app.use(
-    '/user',
-    RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'user' }),
-    userRoutes
-);
-app.use(
-    '/admin',
-    RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'admin' }),
-    adminRoutes
-);
-app.use(
-    '/expert',
-    RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'expert' }),
-    expertRoutes
-);
+app.use('/idea',ideaRoutes);
+app.use('/user',userRoutes);
+app.use('/admin',adminRoutes);
+app.use('/expert',expertRoutes);
 
 // Error Handler Middleware
 app.use(ErrorHandler.errorHandler);
