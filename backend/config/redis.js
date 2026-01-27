@@ -6,8 +6,14 @@ const connectToRedis = async () => {
   try {
     if (redisClient) return redisClient;
 
-    redisClient = createClient({
-      url: process.env.REDIS_URL,
+    // redisClient = createClient({
+    //   url: process.env.REDIS_URL,
+    // });
+    redisClient=createClient({
+      socket: {
+        host: "127.0.0.1",
+        port: 6379,
+      },
     });
 
     redisClient.on("connect", () => {
