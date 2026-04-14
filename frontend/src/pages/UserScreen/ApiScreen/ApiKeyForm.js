@@ -26,7 +26,7 @@ export default function ApiKeyForm() {
 
   const providerModels = {
     groq: ["llama-3.3-70b-versatile","llama-3.1-8b-instant","groq/compound","groq/compound-mini"],
-    openrouter: ["openrouter/free","qwen/qwen3.6-plus:free","nvidia/nemotron-3-super:free","arcee-ai/trinity-large-preview:free","z-ai/glm-4.5-air:free","mistralai/mistral-7b-instruct:free"],
+    openrouter: ["qwen/qwen3.6-plus","arcee-ai/trinity-large-preview:free","z-ai/glm-4.5-air:free"],
     openai: ["gpt-4o-mini","o4-mini","gpt-4o"],
     together: ["togethercomputer/mixtral-8x7b-instruct","togethercomputer/llama-2-70b-chat","togethercomputer/llama-3.2-11b-free"],
     fireworks: ["accounts/fireworks/models/qwen2p5-vl-7b-instruct","accounts/fireworks/models/deepseek-r1","accounts/fireworks/models/gpt-oss-20b","accounts/fireworks/models/qwen3-1p7b-fp8-draft-131072","accounts/fireworks/models/llama-v3p1-405b-instruct","accounts/fireworks/models/llama-v3p1-8b-instruct","accounts/fireworks/models/mixtral-8x7b-instruct"],
