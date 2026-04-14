@@ -40,14 +40,19 @@ app.use(
     RateLimiter.rateLimiter({ windowSeconds, maxRequests, keyPrefix: 'api' })
   );
 //idempotency middleware
-app.use(
-  idempotencyMiddleware({
+const idempotency=idempotencyMiddleware({
     ttlMs: 60 * 60 * 1000,// expiry time 1 hour
     enforce: false,// if true, missing key => 400 for unsafe methods
     useOriginalUrl: false, // false => req.path, true => req.originalUrl
     waitForCompletion: true, // true => wait for completion, false => return immediately
-  })
-);
+});
+app.use(
+  (req, res, next) => {
+  if (req.path.startsWith('/user/check_api_key') || req.path.startsWith('/user/save_api_key')) {
+    return next(); // ✅ skip only this route
+  }
+  return idempotency(req, res, next);
+});
 // API Routes with rate limiting
 app.use('/idea',ideaRoutes);
 app.use('/user',userRoutes);

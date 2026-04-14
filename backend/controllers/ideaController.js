@@ -417,9 +417,11 @@ class GetAllUserIdeas{
             }
             let ideas = [];
             for(let i=0;i<user.ideas.length;i++){
-                const cachedIdea = await redisClient.get(`idea:${user.ideas[i]}`);
+                let cachedIdea = await redisClient.get(`idea:${user.ideas[i]}`);
+                cachedIdea=JSON.parse(cachedIdea);
+                cachedIdea={data: cachedIdea.data, _id: cachedIdea._id, user_id: cachedIdea.user_id, score: cachedIdea.score};
                 if (cachedIdea!=null) {
-                    ideas.push(JSON.parse(cachedIdea));
+                    ideas.push(cachedIdea);
                 }else{
                     const idea = await Idea.findById(user.ideas[i]);
                     await redisClient.set(`idea:${idea._id}`, JSON.stringify(idea),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });

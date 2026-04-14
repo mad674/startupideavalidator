@@ -1,6 +1,6 @@
 # Ignore node modules
 node_modules/
-
+# proper use database queries , design patterns and optimize performance
 # Ignore Python cache
 __pycache__/
 fastapi/__pycache__/

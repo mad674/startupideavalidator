@@ -197,7 +197,12 @@ class CheckApiKey extends validateApiKeyHelper{
         }
 
         // validate against provider
-        const isValid = await super.validateApiKey(user.api.apikey, user.api.provider_name, user.api.model_name);
+        var isValid = false;
+        for(let attempt=0; attempt<3; attempt++){
+          isValid = await super.validateApiKey(user.api.apikey, user.api.provider_name, user.api.model_name);
+          if(isValid) break;
+          // console.warn(`API key validation attempt ${attempt+1} failed for user ${userId}`);
+        }
         if (!isValid) {
           return res.status(401).json({ success: false, message: "API key expired or invalid" });
         }
@@ -245,7 +250,12 @@ class SetApiKey extends validateApiKeyHelper{
         }
         // console.log("Storing API details:", api);
         // validate new key
-        const isValid = await super.validateApiKey(cryptoUtils.encryptApiKey(apikey),provider_name,model_name);
+        var isValid = false;
+        for(let attempt=0; attempt<3; attempt++){
+          isValid = await super.validateApiKey(api.apikey,api.provider_name,api.model_name);
+          if(isValid) break;
+          // console.warn(`API key validation attempt ${attempt+1} failed for user ${userId}`);
+        }
         if (!isValid) {
           return res.status(400).json({ success: false, message: `Invalid or expired API key || No access to ${model_name}` });
         }
@@ -277,15 +287,15 @@ class UserDetails{
         try {
           const redisClient = getRedisClient();
             const userId = req.params.user_id; // Assuming user ID is stored in req.user after authentication
-            const cachedUser = await redisClient.get(`user:${userId}`);
+            const cachedUser = await redisClient.get(`user:profile:${userId}`);
             if (cachedUser!=null) {
                 return res.status(200).json({ user: JSON.parse(cachedUser) });
             }
-            const user = await User.findById(userId).select('-password'); // Exclude password from response
+            const user = await User.findById(userId,{email:1,_id:0}); // Exclude password from response
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.set(`user:profile:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.status(200).json({ user });
         } catch (err) {
             console.error('Get User Details Error:', err.message);
@@ -302,16 +312,16 @@ class GetUserApiKey{
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
             if(req.params.user_id != decodedToken.id)
                 return res.status(401).json({ success: false, message: 'Unauthorized' });// Assuming user ID is stored in req.user after authentication
-            const cachedApi = await redisClient.get(`user:${userId}`);
+            const cachedApi = await redisClient.get(`user:api:${userId}`);
             if (cachedApi!=null) {
                 return res.status(200).json({ api: JSON.parse(cachedApi).api });
             }
-            const user = await User.findById(userId).select('-password'); // Exclude password from response
+            const user = await User.findById(userId,{ api: 1 ,_id:0}); // Exclude password from response
             
             if (!user.api) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.set(`user:api:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
             res.status(200).json({ api: user.api });
         } catch (err) {
             console.error('Get User Details Error:', err.message);

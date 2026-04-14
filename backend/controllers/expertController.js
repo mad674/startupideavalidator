@@ -130,7 +130,7 @@ class GetallExperts{
           if (!decoded) {
               return res.status(401).json({ success: false, message: 'Unauthorized' });
           }
-          const experts = await Expert.find().select('-password');
+          const experts = await Expert.find({},{ideas:0}).select('-password');
           res.status(200).json({ success: true, experts: experts});
       } catch (err) {
           console.error('Get All Experts Error:', err.message);
