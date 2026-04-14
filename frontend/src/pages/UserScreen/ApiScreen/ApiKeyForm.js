@@ -8,7 +8,7 @@ import openaiLogo from "../../../assets/openai.png";
 import togetherLogo from "../../../assets/together.png";
 import fireworksLogo from "../../../assets/fireworks.png";
 import mistralLogo from "../../../assets/mistral.png";
-
+import openrouterLogo from "../../../assets/openrouter.png";
 export default function ApiKeyForm() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,8 @@ export default function ApiKeyForm() {
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
 
   const providerModels = {
-    groq: ["llama-3.1-70b-versatile","llama-3.3-70b-versatile","llama-3.1-8b-instant","mixtral-8x7b-32768","gemma2-9b-it"],
+    groq: ["llama-3.3-70b-versatile","llama-3.1-8b-instant","groq/compound","groq/compound-mini"],
+    openrouter: ["openrouter/free","qwen/qwen3.6-plus:free","nvidia/nemotron-3-super:free","arcee-ai/trinity-large-preview:free","z-ai/glm-4.5-air:free","mistralai/mistral-7b-instruct:free"],
     openai: ["gpt-4o-mini","o4-mini","gpt-4o"],
     together: ["togethercomputer/mixtral-8x7b-instruct","togethercomputer/llama-2-70b-chat","togethercomputer/llama-3.2-11b-free"],
     fireworks: ["accounts/fireworks/models/qwen2p5-vl-7b-instruct","accounts/fireworks/models/deepseek-r1","accounts/fireworks/models/gpt-oss-20b","accounts/fireworks/models/qwen3-1p7b-fp8-draft-131072","accounts/fireworks/models/llama-v3p1-405b-instruct","accounts/fireworks/models/llama-v3p1-8b-instruct","accounts/fireworks/models/mixtral-8x7b-instruct"],
@@ -33,6 +34,7 @@ export default function ApiKeyForm() {
   };
 
   const providerLinks = {
+    openrouter:"https://openrouter.ai/workspaces/default/keys",
     groq: "https://console.groq.com/keys",
     openai: "https://platform.openai.com/account/api-keys",
     together: "https://api.together.xyz/settings/keys",
@@ -42,6 +44,7 @@ export default function ApiKeyForm() {
 
   const providerLogos = {
     groq: groqLogo,
+    openrouter: openrouterLogo,
     openai: openaiLogo,
     together: togetherLogo,
     fireworks: fireworksLogo,
@@ -49,6 +52,7 @@ export default function ApiKeyForm() {
   };
 
   const providerUrls = {
+    openrouter:"https://openrouter.ai/api/v1",
     groq: "https://api.groq.com/openai/v1",
     openai: "https://api.openai.com/v1",
     together: "https://api.together.xyz/v1",

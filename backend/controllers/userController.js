@@ -131,6 +131,7 @@ class validateApiKeyHelper {
       const timeout = setTimeout(() => controller.abort(), 8000);
       const providerUrls = {
         groq: "https://api.groq.com/openai/v1",
+        openrouter: "https://openrouter.ai/api/v1",
         openai: "https://api.openai.com/v1",
         together: "https://api.together.xyz/v1",
         fireworks: "https://api.fireworks.ai/inference/v1",
