@@ -12,7 +12,7 @@
   border-radius: 20px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   background-color: #fafafa;
-  overflow: hidden;
+  overflow-y: auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 h2 {
@@ -271,6 +271,7 @@ h2 {
   .chat-container {
     width: 95%;
     height: 70vh;
+    overflow-y: auto;
   }
   .chat-header {
     font-size: 1.2rem;
@@ -290,6 +291,7 @@ h2 {
   .chat-container {
     background-color: #1e1e1e;
     border-color: #333;
+    overflow-y: auto;
   }
   .chat-header {
     background-color: #3730a3;

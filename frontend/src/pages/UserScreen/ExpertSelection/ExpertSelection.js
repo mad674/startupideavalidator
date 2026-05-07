@@ -117,9 +117,10 @@ const ExpertSelection = () => {
               {expert.received && (
                 <span className="received-message">{expert.received}</span>
                 )}
+              <small className="date">{ expert.ideas[0].createdAt && "connected on "+new Date(expert.ideas[0].createdAt).toLocaleDateString()}</small>
               <p><b>Expert Name: </b>{expert.name}<br/>
               <b>Expertise: </b>{expert.expertise}<br/>
-              <b>Email:</b>{expert.email}</p>
+              <b>Email:</b><small>{expert.email}</small></p>
               <div className="btn-group">
                 <button
                   onClick={() =>

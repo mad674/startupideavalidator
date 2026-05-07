@@ -32,7 +32,7 @@ def delete_single_idea(request: DeleteRequest):
 def delete_all_ideas(req: DeleteAllRequest):
     user_ideas = Memory_Get.get_ideas(req.user_id) or {}
     
-    for idea_id in list(user_ideas.keys()):
+    for idea_id in user_ideas.keys():
         Memory_Delete.delete_idea(req.user_id, idea_id)
 
     return {"success": True, "message": f"All ideas for user {req.user_id} deleted successfully"}

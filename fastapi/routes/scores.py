@@ -24,7 +24,8 @@ def getscore(req: ValidateRequest):
     try:
         # Compute score
         score_agent = ScorerAgent(req.api)
-        scores = score_agent.score_idea(req.api, req.data)
+        
+        scores = score_agent.score_idea(req.data)
         # Store in memory (returns False if duplicate)
         res = Memory_Store.store_idea(
             req.user_id,
@@ -57,4 +58,3 @@ def getscore(req: ValidateRequest):
             status_code=500,
             content={"success": False, "error": str(e)}
         )
-

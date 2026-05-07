@@ -29,7 +29,13 @@ const ChatScreen = () => {
       }
     };
   useEffect(() => {
-    fetchChat();
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchChat();
+      }
+    }, 3000);
+    // Cleanup
+    return () => clearInterval(interval);
   }, [ideaId, token, expertId]);
 
   const sendMessage = async () => {

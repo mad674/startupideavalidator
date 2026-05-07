@@ -1,7 +1,7 @@
 // import React from "react";
-import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate,Outlet} from "react-router-dom";
 import useAuth from "./pages/UserScreen/Auth/useAuth";
-// import { useState,useEffect } from "react";
+import { useState,useEffect } from "react";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/UserScreen/Home/Home";
 import Dashboard from "./pages/UserScreen/Dashboard/Dashboard";
@@ -58,9 +58,117 @@ export default function App() {
       ? children
       : <Navigate to="/expert/login" replace />;
   };
+  const BackendProtectedRoute = () => {
   
+    const [backendStatus, setBackendStatus] =
+      useState("loading");
+  
+    useEffect(() => {
+  
+      const checkBackend = async () => {
+  
+        try {
+  
+          const res = await fetch(
+            `${process.env.REACT_APP_BACKEND}/`
+          );
+  
+          if (!res.ok) {
+            setBackendStatus("offline");
+            return;
+          }
+  
+          setBackendStatus("online");
+  
+        } catch (err) {
+  
+          setBackendStatus("offline");
+        }
+      };
+  
+      checkBackend();
+  
+    }, []);
+  
+  
+    if (backendStatus === "loading") {
+      return <h2>Checking Backend...</h2>;
+    }
+  
+    if (backendStatus === "offline") {
+  
+      return (
+        <div>
+          <h1>🔴 Backend Offline</h1>
+          <p>Please try again later.</p>
+        </div>
+      );
+    }
+  
+    return <Outlet />;
+  };
+
+  const FastAPIProtectedRoute = () => {
+
+  const [aiStatus, setAiStatus] =
+    useState("loading");
+
+  useEffect(() => {
+
+    const checkFastAPI = async () => {
+
+      try {
+
+        const res = await fetch(
+          `${process.env.REACT_APP_FASTAPI}/health`
+        );
+
+        if (!res.ok) {
+          setAiStatus("offline");
+          return;
+        }
+
+        setAiStatus("online");
+
+      } catch (err) {
+
+        setAiStatus("offline");
+      }
+    };
+
+    checkFastAPI();
+
+  }, []);
 
 
+  // LOADING
+  if (aiStatus === "loading") {
+    return <h2>Checking AI Service...</h2>;
+  }
+
+  // AI SERVER DOWN
+  if (aiStatus === "offline") {
+
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+        }}
+      >
+        <h1>⚠️ AI Service Temporarily Down</h1>
+
+        <p>Please try again later.</p>
+      </div>
+    );
+  }
+
+  // AI SERVER ONLINE
+  return <Outlet />;
+  };
   return (
     <BrowserRouter>
       {isAuthenticated && <Navbar onLogout={logout} />}
@@ -88,14 +196,16 @@ export default function App() {
             path="/admin"
             element={<AdminLogin onLogin={adminLogin} />}
           />
-          <Route
-            path="/admindashboard"
-            element={
-              <AdminProtectedRoute>
-                <AdminDashboard/>
-              </AdminProtectedRoute>
-            }
-          />
+          <Route element={<BackendProtectedRoute />}>
+            <Route
+              path="/admindashboard"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard/>
+                </AdminProtectedRoute>
+              }
+            />
+          
           <Route
             path="/adminexpertdashboard"
             element={
@@ -114,6 +224,14 @@ export default function App() {
                   onLogout={adminLogout}
                 />
               </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
             }
           />
           <Route
@@ -161,64 +279,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ApiKeyForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idea/updateidea/:id"
-            element={
-              <ProtectedRoute>
-                <ApiKeyScreen>
-                  <UpdateIdea />
-                </ApiKeyScreen>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idea/suggestions/:id"
-            element={
-              <ProtectedRoute>
-                <ApiKeyScreen>
-                <Suggestions />
-                </ApiKeyScreen>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idea/feedback/:id"
-            element={
-              <ProtectedRoute>
-                <ApiKeyScreen>
-                <Feedback />
-                </ApiKeyScreen>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/idea/chatbot/:id"
-            element={
-              <ProtectedRoute>
-                <ApiKeyScreen>
-                <Chatbot/>
-                </ApiKeyScreen>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create"
-            element={
-              <ProtectedRoute>
-                <ApiKeyScreen>
-                <CreateIdea />
-                </ApiKeyScreen>
               </ProtectedRoute>
             }
           />
@@ -293,6 +353,59 @@ export default function App() {
             </ExpertProtectedRoute>
           }
         />
+        </Route>
+        <Route element={<FastAPIProtectedRoute />}>
+          <Route
+            path="/idea/updateidea/:id"
+            element={
+              <ProtectedRoute>
+                <ApiKeyScreen>
+                  <UpdateIdea />
+                </ApiKeyScreen>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/idea/suggestions/:id"
+            element={
+              <ProtectedRoute>
+                <ApiKeyScreen>
+                <Suggestions />
+                </ApiKeyScreen>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/idea/feedback/:id"
+            element={
+              <ProtectedRoute>
+                <ApiKeyScreen>
+                <Feedback />
+                </ApiKeyScreen>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/idea/chatbot/:id"
+            element={
+              <ProtectedRoute>
+                <ApiKeyScreen>
+                <Chatbot/>
+                </ApiKeyScreen>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <ApiKeyScreen>
+                <CreateIdea />
+                </ApiKeyScreen>
+              </ProtectedRoute>
+            }
+          />
+        </Route>
         </Routes>
       </main>
     </BrowserRouter>

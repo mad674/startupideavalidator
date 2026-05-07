@@ -95,59 +95,8 @@ class MemoryUtils(Memory):
                 deserialized[k] = v
         return deserialized
 
-class MemoryStore(Memory):
-    def __init__(self):
-        super().__init__()
-    # ------------------ Store a new idea ------------------
-    def store_idea(self, user_id, idea_id, idea_text, idea_name, scores,
-               feedbacks=None, suggestions=None, chat_history=None):
-        try:
-            oldidea = self.get_idea(user_id, idea_id) or {}
 
-            # Skip storing if structured idea hasn't changed
-            if json.dumps(oldidea.get("structured", {}), sort_keys=True) == json.dumps(idea_text, sort_keys=True):
-                return False
-            scores = safe_json_load(scores, default={})
-            feedbacks = safe_json_load(feedbacks, default={})
-            suggestions = safe_json_load(suggestions, default={})
-            # Preserve old data, but ensure safe defaults
-            feedbacks = oldidea.get("feedbacks") or {}
-            suggestions = oldidea.get("suggestions") or {}
-            chat_history = oldidea.get("chat_history") or []
-
-            combined_text = (
-                f"Name: {idea_name}\n"
-                f"Problem: {idea_text.get('problem_statement','')}\n"
-                f"Solution: {idea_text.get('solution','')}\n"
-                f"Target Market: {idea_text.get('target_market','')}\n"
-                f"Business Model: {idea_text.get('business_model','')}\n"
-                f"Team: {idea_text.get('team','')}"
-            )
-            embedding = self.embedder.encode(combined_text).tolist()
-
-            metadata = self._serialize_metadata({
-                "user_id": user_id,
-                "name": idea_name,
-                "structured": json.dumps(idea_text),
-                "scores": json.dumps(scores),
-                "feedbacks": json.dumps(feedbacks),
-                "suggestions": json.dumps(suggestions),
-                "chat_history": json.dumps(chat_history),
-                "timestamp": datetime.now().isoformat(),
-                "document": combined_text
-            })
-            metadata = self._truncate_metadata(metadata) or {}
-
-            self.index.upsert(
-                vectors=[{"id": idea_id, "values": embedding, "metadata": metadata}]
-            )
-            return True
-
-        except Exception as e:
-            print(f"[ERROR] store_idea failed: {e}")
-            return False
-
-class MemoryGet(Memory):
+class MemoryGet(MemoryUtils):
     def __init__(self):
         super().__init__()
     # ------------------ Get all ideas for a user ------------------
@@ -280,7 +229,60 @@ class MemoryGet(Memory):
             print(f"[ERROR] get_ideas failed: {e}")
             return {}
 
-class MemoryUpdate(Memory):
+class MemoryStore(MemoryGet):
+    def __init__(self):
+        super().__init__()
+    # ------------------ Store a new idea ------------------
+    def store_idea(self, user_id, idea_id, idea_text, idea_name, scores,
+               feedbacks=None, suggestions=None, chat_history=None):
+        try:
+            oldidea = self.get_idea(user_id, idea_id) or {}
+
+            # Skip storing if structured idea hasn't changed
+            if json.dumps(oldidea.get("structured", {}), sort_keys=True) == json.dumps(idea_text, sort_keys=True):
+                return False
+            scores = safe_json_load(scores, default={})
+            feedbacks = safe_json_load(feedbacks, default={})
+            suggestions = safe_json_load(suggestions, default={})
+            # Preserve old data, but ensure safe defaults
+            feedbacks = oldidea.get("feedbacks") or {}
+            suggestions = oldidea.get("suggestions") or {}
+            chat_history = oldidea.get("chat_history") or []
+
+            combined_text = (
+                f"Name: {idea_name}\n"
+                f"Problem: {idea_text.get('problem_statement','')}\n"
+                f"Solution: {idea_text.get('solution','')}\n"
+                f"Target Market: {idea_text.get('target_market','')}\n"
+                f"Business Model: {idea_text.get('business_model','')}\n"
+                f"Team: {idea_text.get('team','')}"
+            )
+            embedding = self.embedder.encode(combined_text).tolist()
+
+            metadata = self._serialize_metadata({
+                "user_id": user_id,
+                "name": idea_name,
+                "structured": json.dumps(idea_text),
+                "scores": json.dumps(scores),
+                "feedbacks": json.dumps(feedbacks),
+                "suggestions": json.dumps(suggestions),
+                "chat_history": json.dumps(chat_history),
+                "timestamp": datetime.now().isoformat(),
+                "document": combined_text
+            })
+            metadata = self._truncate_metadata(metadata) or {}
+
+            self.index.upsert(
+                vectors=[{"id": idea_id, "values": embedding, "metadata": metadata}]
+            )
+            return True
+
+        except Exception as e:
+            print(f"[ERROR] store_idea failed: {e}")
+            return False
+
+
+class MemoryUpdate(MemoryStore):
     def __init__(self):
         super().__init__()
     # ------------------ Update feedback ------------------
@@ -411,7 +413,7 @@ class MemoryUpdate(Memory):
             print(f"[ERROR] update_idea failed: {e}")
             return False
 
-class MemoryDelete(Memory):
+class MemoryDelete(MemoryUpdate):
     def __init__(self):
         super().__init__()
     # ------------------ Delete an idea ------------------

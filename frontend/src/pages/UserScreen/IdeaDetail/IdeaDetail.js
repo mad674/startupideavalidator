@@ -89,7 +89,8 @@ export default function IdeaDetail() {
 
   return (
     <div className="card idea-detail">
-      <h2>IDEA NAME : {idea.data.name ?? "Not available"}</h2>
+       <small className="idea-date">created on {new Date(idea.createdAt).toLocaleDateString()}</small>
+       <h2>IDEA NAME : {idea.data.name ?? "Not available"}</h2>
       <p>
         <strong>Problem Statement:</strong> {idea.data.problem_statement ?? "Not available"}.<br />
         <strong>solution:</strong>{idea.data.solution?? "Not available"}.<br/>

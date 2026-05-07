@@ -15,9 +15,24 @@ dotenv.config();
 const app = express();
 // Middleware
 app.set('trust proxy', 1);
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization","idempotency-key"],
+  maxAge: 86400 // 🔥 cache preflight for 24 hours
+}));
 app.use(express.json());
-
+// app.use(express.urlencoded({ extended: true }));
+// fetch("https://api.example.com/login", {
+//   method: "POST",
+//   headers: {
+//     "Content-Type": "application/x-www-form-urlencoded"
+//   },
+//   body: new URLSearchParams({
+//     email,
+//     password
+//   })
+// });
 // Connect to MongoDB
 // Mongodb.connectDB();
 // Health check routes

@@ -9,7 +9,11 @@
   --card-border: #e2e8f0;
   --card-shadow: rgba(0, 0, 0, 0.08);
 }
-
+.idea-date{
+  font-size: 14px;
+  color: #777;
+  white-space: nowrap;
+}
 .card.idea-detail {
   font-family: "Inter", sans-serif;
   max-width: 900px;

@@ -24,7 +24,7 @@ class ValidateRequest(BaseModel):
 @router.post("/validate")
 def validate(request: ValidateRequest):
     
-    Validator_Agent = ValidatorAgent(request.api)
+    validator_agent = ValidatorAgent(request.api)
     data={
         "name": request.name if request.name else "No Idea Provided",
         "problem_statement": request.problem_statement if request.problem_statement else "No Problem Statement Provided",
@@ -33,7 +33,7 @@ def validate(request: ValidateRequest):
         "business_model": request.business_model if request.business_model else "No Business Model Provided",
         "team": request.team   if request.team else "No Team Provided",
     }
-    result=Validator_Agent.validate_idea(data)
+    result=validator_agent.validate_idea(data)
     # print("Validation result:", result)
     if "no" == result:
         return {

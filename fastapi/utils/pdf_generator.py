@@ -8,6 +8,7 @@ import re
 
 class PDFGenerator:
     def __init__(self):
+        # No initialization needed for this class
         pass
     def clean_text(self, text: str) -> str:
         replacements = {
@@ -95,7 +96,7 @@ class PDFGenerator:
                 pdf.set_font("Arial", 'B', 13)
                 pdf.cell(0, 8, f"Expert: {expert.get('name', '')} ({expert.get('expertise', '')})", ln=True)
                 pdf.set_font("Arial", 'I', 11)
-                pdf.multi_cell(0, 6, f"Bio: {self.sclean_text(expert.get('bio', ''))}")
+                pdf.multi_cell(0, 6, f"Bio: {self.clean_text(expert.get('bio', ''))}")
                 pdf.multi_cell(0, 6, f"Email: {expert.get('email', '')}")
                 pdf.ln(3)
 

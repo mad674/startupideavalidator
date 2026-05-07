@@ -1,10 +1,15 @@
 
 .expert-chat {
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   font-family: Arial, sans-serif;
 }
 
 .chat-window {
+  display: flex;
+  flex-direction: column;
+  gap:10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 10px;
@@ -20,16 +25,30 @@
   max-width: 70%;
 }
 
+.chat-message {
+  padding: 10px 14px;
+  border-radius: 16px;
+  max-width: 70%;
+  width: fit-content;
+  word-wrap: break-word;
+}
+
+/* User message -> Right side */
 .chat-message.user {
   background-color: #2196f3;
   color: #fff;
   align-self: flex-end;
+  text-align: left;
+  margin-left: auto;
 }
 
+/* Expert message -> Left side */
 .chat-message.expert {
   background-color: #eee;
   color: #000;
   align-self: flex-start;
+  text-align: left;
+  margin-right: auto;
 }
 
 .chat-input {
@@ -52,4 +71,113 @@
   background-color: #2196f3;
   color: #fff;
   cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE ENHANCEMENTS
+   Append below your CSS
+========================= */
+
+/* Make sizing predictable */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Full width container */
+.expert-chat {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Better responsive chat height */
+.chat-window {
+  width: 100%;
+  height: 65vh;
+  min-height: 300px;
+  max-height: 700px;
+}
+
+/* Prevent message overflow */
+.chat-message {
+  width: fit-content;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .expert-chat {
+    padding: 15px;
+  }
+
+  .chat-window {
+    height: 60vh;
+    padding: 8px;
+  }
+
+  .chat-message {
+    max-width: 85%;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  .chat-input {
+    gap: 8px;
+  }
+
+  .chat-input input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .chat-input button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .expert-chat {
+    padding: 10px;
+  }
+
+  .chat-window {
+    height: 55vh;
+    border-radius: 6px;
+  }
+
+  .chat-message {
+    max-width: 92%;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .chat-input {
+    flex-direction: column;
+  }
+
+  .chat-input input {
+    width: 100%;
+  }
+
+  .chat-input button {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .expert-chat {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .chat-window {
+    height: 500px;
+  }
 }

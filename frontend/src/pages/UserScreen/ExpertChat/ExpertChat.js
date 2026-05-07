@@ -36,7 +36,12 @@ const ExpertChat = () => {
       }
     };
   useEffect(() => {
-    fetchChat();
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchChat();
+      }
+    }, 3000);
+    return () => clearInterval(interval);
   }, [ideaId, token]);
 
   const sendMessage = async () => {
@@ -117,7 +122,9 @@ const ExpertChat = () => {
               <div
                 key={idx}
                 className={`chat-message ${msg.sender === "expert" ? "expert" : "user"}`}
-                style={{ position: "relative", paddingRight: "40px" }} // space for delete button
+                style={{
+                position: "relative",
+              }}
               >
                 <div>{msg.message}</div>
                 <small style={{ fontSize: "0.7rem", color: "#666" }}>

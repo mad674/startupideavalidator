@@ -19,10 +19,10 @@ class SuggestionRequest(BaseModel):
 @router.post("/suggestions")
 def getsuggestions(request: SuggestionRequest):
     try:
-        Suggester_agent = SuggesterAgent(request.api)
+        suggester_agent = SuggesterAgent(request.api)
         if not request.data or not request.api or not request.scores:
             return {"success": False, "error": "Missing data or scores"}
-        suggestions=Suggester_agent.suggest_improvements(request.data, request.scores)
+        suggestions=suggester_agent.suggest_improvements(request.data, request.scores)
         us=Memory_Update.update_suggestions(request.user_id, request.idea_id, suggestions)
         # print("suggestions result:", suggestions)
         if(us==False):

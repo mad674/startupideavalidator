@@ -402,36 +402,132 @@ class Getexpertchats{
 
 class GetAllUserIdeas{
     static getAllUserIdeas = async (req, res, next) => {
+
         try {
-            // 1️⃣ Find the user
-            let user;   
-            const redisClient=getRedisClient();
-            const cachedUser = await redisClient.get(`user:${req.params.user_id}`);
-            // if (cachedUser!=null) {
-            //     user = JSON.parse(cachedUser);
-            // }else{
-                user = await User.findById(req.params.user_id);
-            // }
-            if (!user || !user.ideas || user.ideas.length === 0) {
-                return res.status(404).json({ message: 'No ideas found for this user' });
-            }
-            let ideas = [];
-            for(let i=0;i<user.ideas.length;i++){
-                let cachedIdea = await redisClient.get(`idea:${user.ideas[i]}`);
-                cachedIdea=JSON.parse(cachedIdea);
-                cachedIdea={data: cachedIdea.data, _id: cachedIdea._id, user_id: cachedIdea.user_id, score: cachedIdea.score};
-                if (cachedIdea!=null) {
-                    ideas.push(cachedIdea);
-                }else{
-                    const idea = await Idea.findById(user.ideas[i]);
-                    await redisClient.set(`idea:${idea._id}`, JSON.stringify(idea),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+
+            const redisClient = getRedisClient();
+
+            let user;
+
+            // GET USER
+            const cachedUser = await redisClient.get(
+            `user:${req.params.user_id}`
+            );
+
+            if (cachedUser) {
+
+            user = JSON.parse(cachedUser);
+
+            } else {
+
+            user = await User.findById(
+                req.params.user_id
+            );
+
+            if (user) {
+
+                await redisClient.set(
+                `user:${user._id}`,
+                JSON.stringify(user),
+                {
+                    EX:
+                    parseInt(
+                        process.env.REDIS_CACHE_EXPIRY
+                    ) || 3600,
                 }
+                );
             }
-            // 2️⃣ Fetch all ideas matching those idea_ids
-            // const ideas = await Idea.find({ _id: { $in: user.ideas } });
-            res.json(ideas);
+            }
+
+
+            // NO USER / NO IDEAS
+            if (
+            !user ||
+            !user.ideas ||
+            user.ideas.length === 0
+            ) {
+
+            return res.status(404).json({
+                message:
+                "No ideas found for this user",
+            });
+            }
+
+
+            // FETCH ALL IDEAS IN PARALLEL
+            const ideas = await Promise.all(
+
+            user.ideas.map(async (ideaId) => {
+
+                // CHECK CACHE
+                let cachedIdea =
+                await redisClient.get(
+                    `idea:${ideaId}`
+                );
+
+                // CACHE HIT
+                if (cachedIdea) {
+
+                cachedIdea =
+                    JSON.parse(cachedIdea);
+
+                return {
+                    data: cachedIdea.data,
+                    _id: cachedIdea._id,
+                    user_id: cachedIdea.user_id,
+                    score: cachedIdea.score,
+                };
+                }
+
+
+                // FETCH FROM DB
+                const idea = await Idea.findById(
+                ideaId
+                );
+
+                // IDEA NOT FOUND
+                if (!idea) {
+                return null;
+                }
+
+
+                // SAVE TO CACHE
+                await redisClient.set(
+                `idea:${idea._id}`,
+                JSON.stringify(idea),
+                {
+                    EX:
+                    parseInt(
+                        process.env.REDIS_CACHE_EXPIRY
+                    ) || 3600,
+                }
+                );
+
+
+                return {
+                data: idea.data,
+                _id: idea._id,
+                user_id: idea.user_id,
+                score: idea.score,
+                };
+            })
+            );
+
+
+            // REMOVE NULL VALUES
+            const filteredIdeas =
+            ideas.filter((idea) => idea !== null);
+
+
+            return res.json(filteredIdeas);
+
         } catch (err) {
-            console.error('Error in getAllUserIdeas:', err);
+
+            console.error(
+            "Error in getAllUserIdeas:",
+            err
+            );
+
             next(err);
         }
     };

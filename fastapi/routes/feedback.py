@@ -25,7 +25,7 @@ def getfeedback(req: ImproveRequest):
         if not req.data or not req.scores:
             return {"success": False, "error": "Missing data or scores"}
 
-        feedback = Feedback_Agent.feedback_idea(req.data, req.scores)
+        feedback = Feedback_Agent.get_feedback(req.data, req.scores)
         uf=Memory_Update.update_feedback(req.user_id, req.idea_id, feedback)
         if(uf==False):
             return {"success": False, "error": "Error in updating feedback in MemoryStore"}

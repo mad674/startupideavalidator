@@ -7,9 +7,13 @@
 .expert-selection h2 {
   margin-top: 20px;
   margin-bottom: 15px;
-  color: #333;
+  color: hsl(0, 0%, 20%);
 }
-
+.date{
+  font-size: 14px;
+  color: #777;
+  white-space: nowrap;
+}
 .connected-expert-list,
 .expert-list {
   display: grid;

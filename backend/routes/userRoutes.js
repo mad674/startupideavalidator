@@ -23,6 +23,7 @@ router.post('/google', UserAuthentication.GoogleLogin);
 router.post("/forgot-password", PasswordReset.ForgotPassword);
 router.post("/reset-password-otp", ResetPassword.ResetPasswordOtp);
 
+
 router.get('/getuserdetails/:user_id', UserDetails.getUserDetails);
 router.get('/getuserapikey/:user_id', GetUserApiKey.getuserapikey);
 router.put('/updateuserdetails/:user_id', updateUserDetails.updateUserDetails);
