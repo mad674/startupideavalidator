@@ -16,7 +16,7 @@ export default function ApiKeyForm() {
   const [showKey, setShowKey] = useState(false);
   const [provider, setProvider] = useState("groq");
   const [model, setModel] = useState("");
-  const [temperature, setTemperature] = useState(0.6);
+  const [temperature, setTemperature] = useState(0.3);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/";

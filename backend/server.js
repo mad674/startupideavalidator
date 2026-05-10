@@ -22,6 +22,13 @@ app.use(cors({
   maxAge: 86400 // 🔥 cache preflight for 24 hours
 }));
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader(
+    "Cross-Origin-Opener-Policy",
+    "same-origin-allow-popups"
+  );
+  next();
+});
 // app.use(express.urlencoded({ extended: true }));
 // fetch("https://api.example.com/login", {
 //   method: "POST",

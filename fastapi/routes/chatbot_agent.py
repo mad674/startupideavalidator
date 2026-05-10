@@ -1,8 +1,8 @@
 # chatbot.py AGENT API , WEBSOCKET API
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from memory.memory_store import MemoryUtils,MemoryDelete,MemoryGet,MemoryUpdate,MemoryStore
-from langchain.agents import AgentExecutor, create_openai_functions_agent
-from langchain.tools import Tool
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.tools import StructuredTool
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
@@ -111,7 +111,7 @@ def _impl_summarize_history(user_id: str, idea_id: str) -> str:
     except Exception as e:
         return f"Error summarizing history: {e}"
 
-def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_token: str = "") -> str:
+async def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_token: str = "") -> str:
     """Update the idea locally and in backend, with error handling."""
     try:
         idea = memory_get.get_idea(user_id, idea_id)
@@ -119,8 +119,11 @@ def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_tok
             return "⚠️ Idea not found."
         current_structured = idea.get("structured", {}) or {}
         current_structured.update(updated_fields)
-        memory_update.update_idea(user_id=user_id, idea_id=idea_id, updated_fields=current_structured)
-
+        try:
+            memory_update.update_idea(user_id=user_id, idea_id=idea_id, updated_fields=current_structured)
+        except Exception as e:
+            return f"⚠️ Updated locally, backend error: {e}"
+        
         backend_url = os.getenv("BACKEND_URL")
         if backend_url:
             url = f"{backend_url}/idea/updateidea/{idea_id}"
@@ -128,12 +131,12 @@ def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_tok
             if auth_token:
                 headers["Authorization"] = auth_token
             try:
-                with httpx.Client(timeout=30) as client:
-                    resp = client.put(url, json={"data": updated_fields}, headers=headers)
+                async with httpx.AsyncClient(timeout=30) as client:
+                    resp = await client.put(url, json={"data": updated_fields}, headers=headers)
                     if resp.status_code == 200:
                         return f"✅ Updated both locally and backend. Fields: {json.dumps(updated_fields)}"
                     else:
-                        return f"⚠️ Updated locally, backend failed: {resp.message}"
+                        return f"⚠️ Updated locally, backend failed: {resp.text}"
             except Exception as e:
                 # return f"⚠️ Updated locally, backend error: {e}"
                 return f"✅ Updated locally. Fields: {json.dumps(updated_fields)}"
@@ -141,22 +144,32 @@ def _impl_update_idea(user_id: str, idea_id: str, updated_fields: dict, auth_tok
     except Exception as e:
         return f"Error updating idea: {e}"
 
-def _impl_gather_info(query: str) -> str:
+async def _impl_gather_info(query: str) -> str:
     url = "https://serpapi.com/search.json"
     params = {
         "q": query,
         "api_key": os.getenv("SERP_API_KEY"),
-        "num": 3,  # top 3 results
+        "num": 3,
     }
-    response = requests.get(url, params=params).json()
-    answers = []
-    for result in response.get("organic_results", []):
-        snippet = result.get("snippet")
-        link = result.get("link")
-        if snippet:
-            answers.append(f"{snippet} (Source: {link})")
-    return "\n\n".join(answers) if answers else "No relevant info found."
-
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, params=params)
+        data = response.json()
+        answers = []
+        for result in data.get("organic_results", []):
+            snippet = result.get("snippet")
+            link = result.get("link")
+            if snippet:
+                answers.append(
+                    f"{snippet} (Source: {link})"
+                )
+        return (
+            "\n\n".join(answers)
+            if answers
+            else "No relevant info found."
+        )
+    except Exception as e:
+        return f"Search error: {e}"
 # -----------------------------
 # Tools factory
 # -----------------------------
@@ -170,6 +183,10 @@ class UpdateIdeaInput(BaseModel):
     target_market: Optional[str] = None
     team: Optional[str] = None
     business_model: Optional[str] = None
+    
+    model_config = {
+        "extra": "ignore"
+    }
 class GatherInfoInput(BaseModel):
     query: str
 
@@ -177,67 +194,60 @@ class GatherInfoInput(BaseModel):
 
 def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
     
-    def retrieve_idea_tool(_dummy: Optional[str] = None) -> str:
+    def retrieve_idea_tool(query: str="") -> str:
         return _impl_retrieve_idea(user_id, idea_id)
 
-    def summarize_history_tool(_dummy: Optional[str] = None) -> str:
+    def summarize_history_tool(query: str="") -> str:
         return _impl_summarize_history(user_id, idea_id)
         
-    def update_idea_tool(input: UpdateIdeaInput) -> str:
+    async def update_idea_tool(**kwargs) -> str:
         """
         Update idea fields. Assumes `input` is always a Pydantic model.
         """
         try:
+            input_data = UpdateIdeaInput(**kwargs)
             # Only include fields that are not None
-            updated_fields = {k: v for k, v in input.dict().items() if v is not None}
+            updated_fields = {k: v for k, v in input_data.dict().items() if v is not None}
 
             if not updated_fields:
                 return "No valid fields to update."
 
             # Call your implementation to update the idea
-            return _impl_update_idea(user_id, idea_id, updated_fields, auth_token)
+            return await _impl_update_idea(user_id, idea_id, updated_fields, auth_token)
 
         except Exception as e:
             return f"Error updating idea: {e}"
 
-    def gather_info(input: Union[GatherInfoInput, str]) -> str:
-        query = input.query if hasattr(input, "query") else input
+    async def gather_info(query: str) -> str:
         if not query:
             return "Query is required."
-        raw_results = _impl_gather_info(query)
+        raw_results = await _impl_gather_info(query)
         if not raw_results:
             return "No relevant info found."
 
-        prompt = f"Summarize this information clearly for the user:\n{raw_results}"
-
-        # Use invoke with a list of messages
-        summary = llm.invoke([HumanMessage(content=prompt)])
-        return summary.content
+        return raw_results
+    
     return [
-        Tool(
+        StructuredTool.from_function(
             name="retrieve_idea", 
             description="Get the current startup idea.", 
-            func=retrieve_idea_tool,
-            args_schema=None,
-            return_direct=True
+            func=retrieve_idea_tool
         ),
-        Tool(
+        StructuredTool.from_function(
             name="summarize_history", 
             description="Summarize recent chat history.", 
-            func=summarize_history_tool,
-            args_schema=None,
-            return_direct=True
+            func=summarize_history_tool
         ),
-        Tool(
+        StructuredTool.from_function(
             name="update_idea",
-            description="Update idea fields after user confirmation. input should be a Pydantic model.",
-            func=update_idea_tool,
+            description="Update startup idea fields after user confirmation.",
+            coroutine=update_idea_tool,
             args_schema=UpdateIdeaInput
         ),
-        Tool(
+        StructuredTool.from_function(
             name="gather_info",
             description="Gather relevant information from the web.",
-            func=gather_info,
+            coroutine=gather_info,
             args_schema=GatherInfoInput
         )
     ]
@@ -248,12 +258,16 @@ def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
 SYSTEM_PROMPT = """
 You are a **Startup Coach Agent** that helps founders refine and validate their startup ideas.
 
-
 ---
 
-### Context
-The current startup idea is:
-{idea_context}
+### Rules & Constraints
+- When calling update_idea, always pass fields as plain strings (not arrays). If there are multiple values, combine them into a single comma-separated string
+- Allowed fields for update: {{ "name", "problem_statement", "solution", "target_market", "team", "business_model" }}
+- Never hallucinate new fields or return empty responses.
+- Always explicitly choose between **UPDATE** and **CHAT**.
+- For CHAT → output must be plain text only.
+- For UPDATE → output must strictly follow the JSON format shown above.
+- Always require explicit user confirmation before calling the update tool.
 
 ---
 
@@ -296,19 +310,15 @@ The current startup idea is:
 
 ---
 
-### Rules & Constraints
-- When calling update_idea, always pass fields as plain strings (not arrays). If there are multiple values, combine them into a single comma-separated string
-- Allowed fields for update: {{ "name", "problem_statement", "solution", "target_market", "team", "business_model" }}
-- Never hallucinate new fields or return empty responses.
-- Always explicitly choose between **UPDATE** and **CHAT**.
-- For CHAT → output must be plain text only.
-- For UPDATE → output must strictly follow the JSON format shown above.
-- Always require explicit user confirmation before calling the update tool.
+### Goal
+Be reliable, structured, and human-like in coaching while maintaining software-friendly outputs for updates.
 
 ---
 
-### Goal
-Be reliable, structured, and human-like in coaching while maintaining software-friendly outputs for updates.
+### Context
+The current startup idea is:
+{idea_context}
+
 """
 
 # -----------------------------
@@ -341,13 +351,13 @@ def build_agent_executor(llm,user_id: str, idea_id: str, auth_token: str) -> Age
             output_key="output"
         )
 
-        agent = create_openai_functions_agent(
+        agent = create_tool_calling_agent(
             llm=llm,
             tools=tools,
             prompt=prompt,
         )
 
-        return AgentExecutor(agent=agent, tools=tools, memory=agent_memory, verbose=True)
+        return AgentExecutor(agent=agent, tools=tools, memory=agent_memory, verbose=True,handle_parsing_errors="The tool call format was invalid. Respond normally.")
     except Exception as e:
         print(f"Error building agent executor: {e}")
         raise
@@ -398,13 +408,15 @@ async def chat_endpoint(websocket: WebSocket):
             if not all([user_id, idea_id, message, api]):
                 await websocket.send_json({"error": "user_id, idea_id,api_key and message required"})
                 continue
+            is_openai = "openai" in api["provider_url"].lower()
             llm = ChatOpenAI(
                 model=api["model_name"], 
                 temperature=api["temperature"],
                 openai_api_key=decryptor.decrypt_api_key(api["apikey"] or os.getenv("OPENAI_API_KEY")),
                 openai_api_base=api["provider_url"],
+                streaming=is_openai,
             )
-            key = f"{user_id}_{idea_id}"
+            key = f"{user_id}_{idea_id}_{api['provider_url']}_{api['model_name']}"
             if key not in persistent_agents:
                 persistent_agents[key] = build_agent_executor(llm,user_id, idea_id, auth_token)
             agent_executor = persistent_agents[key]
@@ -425,8 +437,7 @@ async def chat_endpoint(websocket: WebSocket):
                 if update_tool:
                     try:
                         # Use pydantic model for validation
-                        update_input = UpdateIdeaInput(**update_fields)
-                        update_result = update_tool.func(update_input)
+                        update_result = await update_tool.ainvoke(update_fields)
                         final_response = str(update_result)
                     except Exception as e:
                         final_response = f"❌ Update error: {e}"
@@ -438,14 +449,17 @@ async def chat_endpoint(websocket: WebSocket):
                     await asyncio.sleep(STREAM_CHUNK_DELAY)
                 await websocket.send_json({"response": final_response, "type": "final"})
                 # Save to memory
-                memory_update.update_idea(
-                    user_id=user_id,
-                    idea_id=idea_id,
-                    append_chat=[
-                        {"role": "user", "content": message, "timestamp": datetime.utcnow().isoformat()},
-                        {"role": "agent", "content": final_response, "timestamp": datetime.utcnow().isoformat()},
-                    ],
-                )
+                try:
+                    memory_update.update_idea(
+                        user_id=user_id,
+                        idea_id=idea_id,
+                        append_chat=[
+                            {"role": "user", "content": message, "timestamp": datetime.utcnow().isoformat()},
+                            {"role": "agent", "content": final_response, "timestamp": datetime.utcnow().isoformat()},
+                        ],
+                    )
+                except Exception as mem_error:
+                    print(f"[MEMORY ERROR] {mem_error}")
                 continue
 
             # Otherwise, normal agent flow
@@ -490,18 +504,23 @@ async def chat_endpoint(websocket: WebSocket):
                 await websocket.send_json({"response": chunk, "type": "stream"})
                 await asyncio.sleep(STREAM_CHUNK_DELAY)
             await websocket.send_json({"response": final_response, "type": "final"})
-
+            try:
             # Save to memory
-            memory_update.update_idea(
-                user_id=user_id,
-                idea_id=idea_id,
-                append_chat=[
-                    {"role": "user", "content": message, "timestamp": datetime.utcnow().isoformat()},
-                    {"role": "agent", "content": final_response, "timestamp": datetime.utcnow().isoformat()},
-                ],
-            )
+                memory_update.update_idea(
+                    user_id=user_id,
+                    idea_id=idea_id,
+                    append_chat=[
+                        {"role": "user", "content": message, "timestamp": datetime.utcnow().isoformat()},
+                        {"role": "agent", "content": final_response, "timestamp": datetime.utcnow().isoformat()},
+                    ],
+                )
+            except Exception as mem_error:
+                print(f"[MEMORY ERROR] {mem_error}")
 
     except WebSocketDisconnect:
+        persistent_agents.pop(key, None)
+        memory_activity.pop(key, None)
+        pending_updates.pop(key, None)
         print("❌ Client disconnected")
     finally:
         cleanup_task.cancel()

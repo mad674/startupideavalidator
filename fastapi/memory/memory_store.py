@@ -400,13 +400,13 @@ class MemoryUpdate(MemoryStore):
             metadata = self._truncate_metadata(metadata) or {}
 
             # ✅ Push to Pinecone
-            self.index.upsert([
-                {
+            self.index.upsert(
+                vectors=[{
                     "id": idea_id,
                     "values": embedding,
                     "metadata": metadata
-                }
-            ])
+                }]
+            )
 
             return True
         except Exception as e:
