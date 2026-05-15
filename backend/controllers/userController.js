@@ -402,7 +402,7 @@ class SetApiKey extends validateApiKeyHelper{
           return res.status(404).json({ success: false, message: "User not found" });
         }
         const redisClient = getRedisClient();
-        await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });    
+        await redisClient.set(`user:${userId}`, JSON.stringify(user), "EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );    
         res.status(200).json({
           success: true,
           message: "API key saved successfully",
@@ -427,7 +427,7 @@ class UserDetails{
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            await redisClient.set(`user:profile:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.set(`user:profile:${userId}`, JSON.stringify(user),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
             res.status(200).json({ user });
         } catch (err) {
             console.error('Get User Details Error:', err.message);
@@ -453,7 +453,7 @@ class GetUserApiKey{
             if (!user.api) {
                 return res.status(404).json({ message: 'User not found' });
             }
-            await redisClient.set(`user:api:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.set(`user:api:${userId}`, JSON.stringify(user),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
             res.status(200).json({ api: user.api });
         } catch (err) {
             console.error('Get User Details Error:', err.message);
@@ -478,7 +478,7 @@ class updateUserDetails{
                 return res.status(404).json({success: false, message: 'User not found' });
             }
             const redisClient = getRedisClient();
-            await redisClient.set(`user:${userId}`, JSON.stringify(user),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+            await redisClient.set(`user:${userId}`, JSON.stringify(user),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
             res.status(200).json({success: true, message: 'User details updated successfully' });
         } catch (err) {
             console.error('Update User Details Error:', err.message);

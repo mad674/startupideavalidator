@@ -156,7 +156,7 @@ class GetExpert{
                   experts.push(JSON.parse(cachedExpert));
               }else{
                   const expert=await Expert.findById(ideas.experts[i]);
-                  if(expert) {await redisClient.set(`expert:${ideas.experts[i]}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+                  if(expert) {await redisClient.set(`expert:${ideas.experts[i]}`, JSON.stringify(expert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
                   experts.push(expert)};
               }
           }
@@ -186,7 +186,7 @@ class GetoneExpert{
               expert=JSON.parse(cachedExpert);
           }else{
               expert=await Expert.findById(expertId).select('-password');
-              if(expert)await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+              if(expert)await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           }
           // const expert=await Expert.findById(expertId).select('-password');
           if (!expert) {
@@ -214,7 +214,7 @@ class UpdateProfile{
           expert.bio = bio || expert.bio;
           const updatedExpert = await expert.save();
           const redisClient=getRedisClient();
-          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           res.status(200).json({ success: true, message: 'Profile updated successfully', expert: expert });
       } catch (err) {
           console.error('Update Profile Error:', err.message);
@@ -261,7 +261,7 @@ class Getchat{
       }
       else{
           expert=await Expert.findById(expertId);
-          if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
       }
       // const expert = await Expert.findById(expertId);
       if (!expert || !ideaId) {
@@ -325,7 +325,7 @@ class ChatMessage{
 
           const updatedExpert = await expert.save();
           const redisClient=getRedisClient();
-          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           res.status(200).json({ success: true, message: 'Message added successfully', chat: chatMessage });
       } catch (err) {
           console.error('Add Chat Message Error:', err.message);
@@ -350,7 +350,7 @@ class DeleteMessage{
           ideaEntry.chathistory = ideaEntry.chathistory.filter(m => m._id.toString() !== messageId.toString());
           const updatedExpert = await expert.save();
           const redisClient=getRedisClient();
-          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(updatedExpert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           res.status(200).json({ success: true, message: 'Message deleted successfully' });
       } catch (err) {
           console.error('Delete Message Error:', err.message);
@@ -372,7 +372,7 @@ class GetAllIdeas{
           }
           else{
               expert=await Expert.findById(expertId);
-              if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+              if(expert) await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           }
           // const expert = await Expert.findById(expertId);//.populate('ideas.idea_id');
           const ideas=await Idea.find({_id:{$in:expert.ideas.map(i=>i.ideaid)}});//.populate('createdBy','name email');
@@ -452,7 +452,7 @@ class UpdatePassword{
               return res.status(404).json({ message: 'Expert not found' });
           }
           const redisClient=getRedisClient();
-          await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),{ EX: parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 });
+          await redisClient.set(`expert:${expertId}`, JSON.stringify(expert),"EX", parseInt(process.env.REDIS_CACHE_EXPIRY) || 3600 );
           res.status(200).json({ success: true, message: 'Password updated successfully' });
       } catch (err) {
           console.error('Update Password Error:', err.message);
