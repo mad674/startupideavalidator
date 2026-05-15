@@ -10,6 +10,8 @@ const Mongodb = require('./config/db'); // DB connection file
 const { connectToRedis} = require('./config/redis'); // Redis connection file
 const dotenv = require('dotenv');
 const {idempotencyMiddleware} = require('./middleware/idempotency');
+const {sequelize,connectPostgres} = require("./config/postgres");
+
 dotenv.config();
 
 const app = express();
@@ -75,6 +77,8 @@ app.use(
   }
   return idempotency(req, res, next);
 });
+
+
 // API Routes with rate limiting
 app.use('/idea',ideaRoutes);
 app.use('/user',userRoutes);
@@ -87,11 +91,18 @@ app.use(ErrorHandler.errorHandler);
 // Port
 const PORT = process.env.PORT || 5000;
 
-(async () => {
+async function startserver(){
   try {
-    await Mongodb.connectDB();
-    await connectToRedis();
-
+    await Promise.all([
+      Mongodb.connectDB(),
+      connectToRedis(),
+      connectPostgres()
+    ]);
+    require('./workers/reportWorker');
+    const createBullBoardServer=require("./config/bullBoard");
+    const bullBoard=createBullBoardServer();
+    app.use('/admin/queues',bullBoard.getRouter());
+    await sequelize.sync();
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
@@ -99,4 +110,5 @@ const PORT = process.env.PORT || 5000;
     console.error('❌ Server startup failed:', err);
     process.exit(1);
   }
-})();
+}
+startserver();

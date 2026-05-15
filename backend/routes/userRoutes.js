@@ -12,7 +12,8 @@ const {
     ResetPassword,
     SetApiKey,
     GetUserApiKey,
-    updateUserDetails
+    updateUserDetails,
+    PDFGenerator
 }= require('../controllers/userController');
 
 router.post("/check_api_key/:user_id", CheckApiKey.checkApiKey);
@@ -22,8 +23,10 @@ router.post('/login', UserLogin.login);
 router.post('/google', UserAuthentication.GoogleLogin);
 router.post("/forgot-password", PasswordReset.ForgotPassword);
 router.post("/reset-password-otp", ResetPassword.ResetPasswordOtp);
+router.post('/pdf_report', PDFGenerator.generatePDF);
 
-
+router.get('/status/:jobId', PDFGenerator.statusPDF);
+router.get('/download/:fileName',PDFGenerator.DownloadPDF);
 router.get('/getuserdetails/:user_id', UserDetails.getUserDetails);
 router.get('/getuserapikey/:user_id', GetUserApiKey.getuserapikey);
 router.put('/updateuserdetails/:user_id', updateUserDetails.updateUserDetails);

@@ -31,6 +31,87 @@ export default function IdeaDetail() {
     fetchIdeaData();
   }, [id]);
 
+  const generatePDF = async () => {
+
+    try {
+
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND}/user/pdf_report`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            idea_id: atob(id),
+            user_id: idea.user_id
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      const jobId = data.jobId;
+
+      // Step 2 → Poll Job Status
+      pollJobStatus(jobId);
+
+    } catch (error) {
+      console.error(error);
+      showToast("Error generating PDF");
+    }
+  };
+  const pollJobStatus = (jobId) => {
+
+    const interval = setInterval(async () => {
+
+      try {
+
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND}/user/status/${jobId}`
+        );
+
+        const data = await response.json();
+
+        console.log(data);
+
+        // PDF Ready
+        if (data.state === "completed") {
+
+          clearInterval(interval);
+
+          const fileName =
+            data.result.storedFileName;
+
+          const downloadUrl =
+            `${process.env.REACT_APP_BACKEND}/user/download/${fileName}`;
+
+          // Download PDF
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+          link.setAttribute("download", "");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
+        // Failed
+        if (data.state === "failed") {
+
+          clearInterval(interval);
+
+          alert("PDF generation failed");
+        }
+
+      } catch (error) {
+
+        clearInterval(interval);
+
+        console.error(error);
+      }
+
+    }, 3000);
+  };
   async function handleDelete() {
     if (!window.confirm("Are you sure you want to delete this idea?")) return;
     try {
@@ -49,40 +130,6 @@ export default function IdeaDetail() {
       showToast("Error deleting idea");
     }
   }
-
-  const handleDownload = async () => {
-  try {
-    const response = await fetch(`${process.env.REACT_APP_FASTAPI}/api/pdf`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        idea_id: atob(id),
-        user_id: idea.user_id
-      }),
-    });
-    
-    if (!response.ok) {
-      showToast("Failed to generate PDF");return;
-    }
-    // Convert to blob
-    const blob = await response.blob();
-
-    // Create a download link
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${idea.data.name}_report.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (err) {
-    console.error("PDF download failed", err);
-  }
-  };
-
-
 
   if (loading) return <p>Loading...</p>;
   if (!idea) return <p>No idea found.</p>;
@@ -129,7 +176,8 @@ export default function IdeaDetail() {
           Delete Idea
         </button>
       </div>
-      <button onClick={handleDownload}>📥 Download Report</button>
+      <button onClick={generatePDF}>📥 Download Report</button>
     </div>
   );
 }
+

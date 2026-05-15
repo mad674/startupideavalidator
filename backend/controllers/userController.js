@@ -7,8 +7,139 @@ const dotenv = require('dotenv');
 const nodemailer=require("nodemailer");
 const  GoogleConfig = require('../middleware/googleconfig');
 const {getRedisClient} = require('../config/redis');
+const createReportQueue = require('../queues/reportQueue');
+const path=require('path');
+const fs=require('fs');
 dotenv.config();
 
+class PDFGenerator{
+  static generatePDF = async (req, res) => {
+    try {
+    const { idea_id, user_id } = req.body;
+    if (!idea_id || !user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "idea_id and user_id required"
+      });
+    }
+    const reportQueue = createReportQueue();
+    // Add Queue Job
+    const job = await reportQueue.add(
+
+      "generate-ai-report",
+
+      {
+        idea_id,
+        user_id
+      },
+
+      {
+        attempts: 3,
+
+        backoff: {
+          type: "exponential",
+          delay: 3000
+        },
+
+        removeOnComplete: 100,
+        removeOnFail: 50
+      }
+    );
+
+    return res.status(202).json({
+      success: true,
+      message: "PDF generation started",
+      jobId: job.id
+    });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to start report generation"
+      });
+    }
+  }
+  static statusPDF = async (req, res) => {
+    try {
+
+    const { jobId } = req.params;
+
+    const reportQueue = createReportQueue();
+    const job = await reportQueue.getJob(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found"
+      });
+    }
+
+    const state = await job.getState();
+
+    return res.json({
+      success: true,
+      state,
+      result: job.returnvalue || null
+    });
+
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch status"
+      });
+    }
+  }
+  static DownloadPDF = async (req, res) => {
+    try {
+
+    const { fileName } = req.params;
+
+    const filePath = path.join(
+      __dirname,
+      "../../reports",
+      fileName
+    );
+
+    // File existence check
+    if (!fs.existsSync(filePath)) {
+
+      return res.status(404).json({
+        success: false,
+        message: "PDF not found"
+      });
+    }
+
+    const cleanFileName =fileName.split("-")[0]+".pdf";
+    // Download file
+    res.download(filePath,cleanFileName, (err) => {
+
+      if (err) {
+        console.error("Download Error:", err);
+        return;
+      }
+
+      // Delete after successful download
+      fs.unlink(filePath, (unlinkErr) => {
+
+        if (unlinkErr) {
+          console.error("Delete Error:", unlinkErr);
+        } else {
+          console.log(`🗑️ Deleted PDF: ${fileName}`);
+        }
+      });
+    });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to download PDF"
+      });
+    }
+  }
+
+}
 class UserAuthentication{
     static GoogleLogin = async (req, res, next) => {
       try {
@@ -482,5 +613,6 @@ module.exports = {
     ResetPassword,
     SetApiKey,
     GetUserApiKey,
-    updateUserDetails
+    updateUserDetails,
+    PDFGenerator
 };
