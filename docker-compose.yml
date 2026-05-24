@@ -83,8 +83,14 @@ services:
     depends_on:
       - backend
       - fastapi
-
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
 volumes:
   mongo_data:
   redis_data:
   postgres_data:
+  qdrant_storage:

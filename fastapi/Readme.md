@@ -18,6 +18,77 @@ The system acts as:
 
 > A persistent AI startup coach that can remember startup ideas, refine them, search the web, update structured business data, and support multiple AI providers dynamically.
 
+
+## Document Upload & RAG Processing
+
+This endpoint allows users to upload PDFs or documents that are automatically processed into a Retrieval-Augmented Generation (RAG) pipeline.
+
+### Upload Flow
+
+```text
+Upload File
+   │
+   ├── Save temporary local file
+   ├── Extract document text
+   ├── Split into chunks
+   ├── Generate embeddings
+   ├── Store vectors in Qdrant
+   └── Delete temporary file
+```
+
+### Features
+
+* Supports document ingestion for AI-powered retrieval
+* Automatically chunks uploaded documents
+* Generates semantic embeddings using Sentence Transformers
+* Stores embeddings and metadata in Qdrant vector database
+* Multi-user document isolation using `user_id`
+* Temporary files are automatically deleted after processing
+* Citation-aware metadata support
+
+### Metadata Stored Per Chunk
+
+Each chunk stored in Qdrant includes:
+
+* `text`
+* `chunk_index`
+* `chunk_id`
+* `user_id`
+* `idea_id`
+* `file_id`
+* `filename`
+
+This enables:
+
+* semantic search
+* document citations
+* user-specific retrieval
+* traceable RAG responses
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "chunks": 42
+}
+```
+
+### Notes
+
+* Uploaded files are not permanently stored
+* Documents are processed immediately and deleted afterward
+* Only vector embeddings and metadata remain in Qdrant
+* Optimized for lightweight RAG-based applications
+
+### Tech Stack
+
+* FastAPI
+* Qdrant Cloud
+* Sentence Transformers
+* Hybrid Retrieval (Dense + BM25)
+* LangChain Agents
+
 ---
 
 # High-Level Architecture

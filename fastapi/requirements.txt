@@ -14,3 +14,7 @@ crypto
 pycryptodome
 python-dotenv
 websockets
+qdrant-client
+rank-bm25
+pypdf
+python-docx

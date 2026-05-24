@@ -18,6 +18,7 @@ import os, json, asyncio, httpx, traceback
 from utils.encrypt import Decryptor
 from langchain_openai import ChatOpenAI
 import requests 
+from rag.rag_tool import Retriever
 
 load_dotenv()
 
@@ -29,6 +30,9 @@ memory_get=MemoryGet()
 memory_update=MemoryUpdate()
 memory_delete=MemoryDelete()
 decryptor=Decryptor()
+retriever=Retriever()
+
+
 # -----------------------------
 # Health check endpoint for monitoring
 # -----------------------------
@@ -190,6 +194,8 @@ class UpdateIdeaInput(BaseModel):
 class GatherInfoInput(BaseModel):
     query: str
 
+class RetrieveDocumentsInput(BaseModel):
+    query: str
 
 
 def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
@@ -227,6 +233,32 @@ def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
 
         return raw_results
     
+    def retrieve_docs(query: str) -> str:
+
+        try:
+
+            result = retriever.retrieve_documents(
+                query=query,
+                user_id=user_id,
+                idea_id=idea_id,
+                top_k=3
+            )
+
+            if not result:
+                return "No relevant documents found."
+            print("Tool res:",result)
+            if isinstance(result, dict):
+
+                return result.get(
+                    "context",
+                    "No relevant document content found."
+                )
+
+            return str(result)
+
+        except Exception as e:
+            return f"Document retrieval error: {e}"
+    
     return [
         StructuredTool.from_function(
             name="retrieve_idea", 
@@ -249,18 +281,27 @@ def build_tools_with_context(llm,user_id: str, idea_id: str, auth_token: str):
             description="Gather relevant information from the web.",
             coroutine=gather_info,
             args_schema=GatherInfoInput
+        ),
+        StructuredTool.from_function(
+            name="retrieve_documents",
+            description="Answer questions about uploaded PDFs,documents, reports, pitch decks, research files,or user knowledge-base content.Always use this tool before answering questions that depend on uploaded documents.",
+            func=retrieve_docs,
+            args_schema=RetrieveDocumentsInput
         )
     ]
 
 # -----------------------------
 # System Prompt
 # -----------------------------
+
 SYSTEM_PROMPT = """
 You are a **Startup Coach Agent** that helps founders refine and validate their startup ideas.
 
 ---
 
 ### Rules & Constraints
+- If the user asks questions about uploaded files, PDFs, reports, pitch decks, research documents, summaries, or knowledge-base content, ALWAYS use the retrieve_documents tool before answering.
+- After retrieving document context, answer using the retrieved information instead of making assumptions show sources.
 - When calling update_idea, always pass fields as plain strings (not arrays). If there are multiple values, combine them into a single comma-separated string
 - Allowed fields for update: {{ "name", "problem_statement", "solution", "target_market", "team", "business_model" }}
 - Never hallucinate new fields or return empty responses.
@@ -309,12 +350,9 @@ You are a **Startup Coach Agent** that helps founders refine and validate their 
    - If the message is unclear → ask a clarifying follow-up question.
 
 ---
-
 ### Goal
 Be reliable, structured, and human-like in coaching while maintaining software-friendly outputs for updates.
-
 ---
-
 ### Context
 The current startup idea is:
 {idea_context}

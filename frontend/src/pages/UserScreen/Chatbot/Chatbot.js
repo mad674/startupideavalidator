@@ -10,8 +10,15 @@ export default function Chatbot() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : "";
   const auth_token = `Bearer ${token || ""}`;
-
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   // safe parse userId from token (best-effort)
+  const SUPPORTED_FILES = [
+    "application/pdf",
+    "text/plain",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
   let userId = "unknown_user";
   try {
     if (token) {
@@ -73,22 +80,63 @@ export default function Chatbot() {
     };
 
     ws.current.onmessage = (event) => {
-      let botMessage = "";
-      try {
-        const data = JSON.parse(event.data);
-        // backend might send {message: "..."} or {text: "..."}
-        botMessage = data.message || data.text || event.data;
-        if (data.type === "final" && data.response) {
-          setMessages((prev) => [
-            ...prev,
-            { id: `bot-${Date.now()}`, sender: "bot", text: data.response },
-          ]);
-        }
-      } catch {
-        botMessage = event.data; // fallback if plain text
-      }
 
-      
+      try {
+
+        const data = JSON.parse(event.data);
+
+        // STREAMING RESPONSE
+        if (data.type === "stream") {
+
+          setMessages((prev) => {
+
+            const updated = [...prev];
+
+            const last = updated[updated.length - 1];
+
+            if (last && last.sender === "bot-stream") {
+
+              last.text += " " + data.response;
+
+            } else {
+
+              updated.push({
+                id: `stream-${Date.now()}`,
+                sender: "bot-stream",
+                text: data.response,
+              });
+            }
+
+            return [...updated];
+          });
+
+          return;
+        }
+
+        // FINAL RESPONSE
+        if (data.type === "final") {
+
+          setMessages((prev) => {
+
+            const filtered = prev.filter(
+              (m) => m.sender !== "bot-stream"
+            );
+
+            return [
+              ...filtered,
+              {
+                id: `bot-${Date.now()}`,
+                sender: "bot",
+                text: data.response,
+              },
+            ];
+          });
+        }
+
+      } catch (err) {
+
+        console.error(err);
+      }
     };
 
     ws.current.onclose = () => console.warn("WebSocket closed");
@@ -120,7 +168,75 @@ export default function Chatbot() {
     ws.current.send(JSON.stringify(payload));
     setInput("");
   };
+  const handleFileUpload = async (e) => {
 
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setUploadError("");
+
+    // Validate file type
+    if (!SUPPORTED_FILES.includes(file.type)) {
+
+      setUploadError(
+        "Unsupported file type. Only PDF, DOCX, and TXT are supported."
+      );
+
+      return;
+    }
+
+    try {
+
+      setUploading(true);
+
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      const response = await fetch(
+        `${process.env.REACT_APP_FASTAPI}/api/upload?user_id=${userId}&idea_id=${ideaId}`,
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Upload failed");
+      }
+
+      setUploadedFiles((prev) => [
+        ...prev,
+        {
+          filename: file.name,
+          chunks: data.chunks,
+        },
+      ]);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `upload-${Date.now()}`,
+          sender: "bot",
+          text: `✅ Uploaded "${file.name}" successfully.`,
+        },
+      ]);
+
+    } catch (err) {
+
+      setUploadError(err.message);
+
+    } finally {
+
+      setUploading(false);
+    }
+  };
   // auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -139,7 +255,43 @@ export default function Chatbot() {
         ))}
         <div ref={messagesEndRef} />
       </div>
+        <div className="upload-section">
+          <input
+            type="file"
+            accept=".pdf,.docx,.txt"
+            onChange={handleFileUpload}
+            disabled={uploading}
+          />
 
+          {uploading && (
+            <p className="upload-status">
+              Uploading document...
+            </p>
+          )}
+
+          {uploadError && (
+            <p className="upload-error">
+              {uploadError}
+            </p>
+          )}
+
+          {uploadedFiles.length > 0 && (
+
+            <div className="uploaded-files">
+
+              {uploadedFiles.map((file, index) => (
+
+                <small key={index}>
+
+                  📄 {file.filename}
+
+                </small>
+
+              ))}
+
+            </div>
+          )}
+        </div>
       <div className="chat-input">
         <input
           type="text"

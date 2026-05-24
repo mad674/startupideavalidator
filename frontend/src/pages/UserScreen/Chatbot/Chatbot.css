@@ -170,4 +170,24 @@
   background-color: #aaa;
 } */
 
+.upload-section {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size:xx-small;
+}
+
+.upload-status {
+  color: #555;
+  font-size: 14px;
+}
+
+.upload-error {
+  color: red;
+  font-size: 14px;
+}
+
+.uploaded-files {
+  margin-top: 10px;
+  font-size: 14px;
+}
 
