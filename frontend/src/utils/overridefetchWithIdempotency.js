@@ -16,7 +16,17 @@ export function overrideFetchWithIdempotency() {
     // if (!urlString.startsWith("/api/")) {
     //   return originalFetch(url, options);
     // }
-
+    const aiRoutes = [
+      "/idea/submitidea",
+      "/idea/getsuggestions",
+      "/idea/getfeedback",
+      "/idea/updateidea",
+      "/idea/deleteidea",
+      "/idea/deletealluserideas"
+    ];
+    if (aiRoutes.some(route => urlString.includes(route))) {
+      return originalFetch(url, options);
+    }
     const body = options.body || "";
 
     // fingerprint (same request retry)

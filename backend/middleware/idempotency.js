@@ -129,8 +129,20 @@ function idempotencyMiddleware({
       const userId = getUserId(req);
       const method = req.method;
       const path = useOriginalUrl ? req.originalUrl : req.path;
-      const requestHash = createRequestHash(req);
+      const skipRoutes = [
+            "/idea/submitidea",
+            "/idea/getsuggestions",
+            "/idea/getfeedback",
+            "/idea/updateidea",
+            "/idea/deleteidea",
+            "/idea/deletealluserideas"
+      ];
 
+      if (skipRoutes.some(route => path.includes(route))) {
+          return next();
+      }
+      const requestHash = createRequestHash(req);
+      
       // ✅ 1) Check if record exists
       const existing = await IdempotencyKey.findOne({
         key,
@@ -289,8 +301,10 @@ function idempotencyMiddleware({
       }
 
       // ✅ IMPORTANT: do NOT make these async
-      res.json = function (body) {
-        saveSuccess(body).catch(() => {});
+      res.json = function(body) {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          saveSuccess(body).catch(() => {});
+        }
         return originalJson(body);
       };
 
