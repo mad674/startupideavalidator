@@ -8,7 +8,7 @@ export function overrideFetchWithIdempotency() {
     const method = (options.method || "GET").toUpperCase();
 
     // only apply for unsafe methods
-    const unsafe = ["POST", "PUT", "PATCH", "DELETE","HEAD"].includes(method);
+    const unsafe = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
     if (!unsafe) return originalFetch(url, options);
 
     // only apply for /api/*
@@ -18,7 +18,8 @@ export function overrideFetchWithIdempotency() {
     // }
     const aiRoutes = [
       "/idea/getsuggestions",
-      "/idea/getfeedback"
+      "/idea/getfeedback",
+      "/health",
     ];
     if (aiRoutes.some(route => urlString.includes(route))) {
       return originalFetch(url, options);
