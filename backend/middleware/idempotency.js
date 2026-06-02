@@ -130,12 +130,8 @@ function idempotencyMiddleware({
       const method = req.method;
       const path = useOriginalUrl ? req.originalUrl : req.path;
       const skipRoutes = [
-            "/idea/submitidea",
             "/idea/getsuggestions",
-            "/idea/getfeedback",
-            "/idea/updateidea",
-            "/idea/deleteidea",
-            "/idea/deletealluserideas"
+            "/idea/getfeedback"
       ];
 
       if (skipRoutes.some(route => path.includes(route))) {

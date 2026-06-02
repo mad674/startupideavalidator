@@ -17,12 +17,8 @@ export function overrideFetchWithIdempotency() {
     //   return originalFetch(url, options);
     // }
     const aiRoutes = [
-      "/idea/submitidea",
       "/idea/getsuggestions",
-      "/idea/getfeedback",
-      "/idea/updateidea",
-      "/idea/deleteidea",
-      "/idea/deletealluserideas"
+      "/idea/getfeedback"
     ];
     if (aiRoutes.some(route => urlString.includes(route))) {
       return originalFetch(url, options);
