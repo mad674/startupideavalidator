@@ -109,46 +109,47 @@ export default function App() {
   };
 
   const FastAPIProtectedRoute = () => {
-
-  const [aiStatus, setAiStatus] =
-    useState("loading");
+  const [aiStatus, setAiStatus] = useState("loading");
 
   useEffect(() => {
+    const sleep = (ms) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
     const checkFastAPI = async () => {
+      const maxRetries = 5;
 
-      try {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const res = await fetch(
+            `${process.env.REACT_APP_FASTAPI}/health`
+          );
+          console.log("Status:", res.status);
+          if (res.ok) {
+            setAiStatus("online");
+            return;
+          }
 
-        const res = await fetch(
-          `${process.env.REACT_APP_FASTAPI}/health`
-        );
-
-        if (!res.ok) {
-          setAiStatus("offline");
-          return;
+          console.log(`Health check failed: attempt ${attempt}`);
+        } catch (err) {
+          console.log(`Request failed: attempt ${attempt}`, err);
         }
 
-        setAiStatus("online");
-
-      } catch (err) {
-
-        setAiStatus("offline");
+        if (attempt < maxRetries) {
+          await sleep(3000); // wait 3 seconds
+        }
       }
+
+      setAiStatus("offline");
     };
 
     checkFastAPI();
-
   }, []);
 
-
-  // LOADING
   if (aiStatus === "loading") {
     return <h2>Checking AI Service...</h2>;
   }
 
-  // AI SERVER DOWN
   if (aiStatus === "offline") {
-
     return (
       <div
         style={{
@@ -160,15 +161,13 @@ export default function App() {
         }}
       >
         <h1>⚠️ AI Service Temporarily Down</h1>
-
         <p>Please try again later.</p>
       </div>
     );
   }
 
-  // AI SERVER ONLINE
   return <Outlet />;
-  };
+};
   return (
     <BrowserRouter>
       {isAuthenticated && <Navbar onLogout={logout} />}
