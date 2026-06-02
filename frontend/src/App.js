@@ -120,7 +120,10 @@ export default function App() {
       try {
 
         const res = await fetch(
-          `${process.env.REACT_APP_FASTAPI}/health`
+          `${process.env.REACT_APP_FASTAPI}/health`,
+          {
+            method: "HEAD"
+          }
         );
 
         if (!res.ok) {

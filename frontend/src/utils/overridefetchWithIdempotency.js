@@ -8,7 +8,7 @@ export function overrideFetchWithIdempotency() {
     const method = (options.method || "GET").toUpperCase();
 
     // only apply for unsafe methods
-    const unsafe = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+    const unsafe = ["POST", "PUT", "PATCH", "DELETE","HEAD"].includes(method);
     if (!unsafe) return originalFetch(url, options);
 
     // only apply for /api/*
